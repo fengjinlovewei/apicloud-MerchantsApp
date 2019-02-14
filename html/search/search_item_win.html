@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" type="text/css" href="../../css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../../css/home_frm.css">
+    <title>Document</title>
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <div id="vm">
+        <div id="item0">
+            <div class="msg" v-if="totalQuantity>0" id="fixedTop">
+                <span>共为您搜索出{{totalQuantity}}个订单</span>
+            </div>
+            <div id="fixedTop-none">
+
+            </div>
+            <div class="msg-clone"></div>
+            <div>
+                <div class="item1" v-for="(list,index) in item" :data-distributionType="list.distributionType" :data-id="list.id" :data-orderMode="list.orderMode" :data-time="list.remainingTime">
+                    <div class="item-tit" onclick="vm.open_order(this)" tapmode :data-index="index">
+                        <span>订单号：<em>{{list.no}}</em></span>
+                        <i v-if="list.orderState==0">未接单<b></b></i>
+                        <i v-if="list.orderState==1">待打印<b></b></i>
+                        <i v-if="list.orderState==2">已拣货<b></b></i>
+                        <em v-if="list.orderState==3">
+                            <s v-if="list.distributionType!=3">
+                                <i v-if="list.acceptState==0&&list.orderMode==1">未抢单<b></b></i>
+                                <i v-if="list.acceptState==1&&list.orderMode==1">已抢单<b></b></i>
+                                <i v-if="list.orderMode==2&&list.remainingTime>0">待自提<b></b></i>
+                                <i v-if="list.orderMode==2&&list.remainingTime<=0">已超时<b></b></i>
+                            </s>
+                            <s v-else>
+                                <i>待配送<b></b></i>
+                            </s>
+                        </em>
+                        <i v-if="list.orderState==4">配送中<b></b></i>
+                        <i v-if="list.orderState==5">已完成<b></b></i>
+                        <i v-if="list.orderState==10">申请取消<b></b></i>
+                        <i v-if="list.orderState==11">已拒收<b></b></i>
+                        <i v-if="list.orderState==12">已取消<b></b></i>
+                    </div>
+                    <div class="item-body" clear onclick="vm.open_order(this)" tapmode :data-index="index">
+                        <div class="item-body-l" fl mid v-if="list.orderState!=11&&list.orderState!=12">
+                            <span v-if="list.orderState==0"><i>{{list.remainingTime}}m</i><b>接单剩余</b></span>
+                            <span v-if="list.orderState==1">待拣货</span>
+                            <span v-if="list.orderState==2">待召唤</span>
+                            <em v-if="list.orderState==3">
+                                <s v-if="list.distributionType!=3">
+                                    <span v-if="list.orderMode==1">待配送</span>
+                                    <span v-if="list.orderMode==2&&list.remainingTime>0">待自提</span>
+                                    <span v-if="list.orderMode==2&&list.remainingTime<=0">已超时</span>
+                                </s>
+                                <s v-else>
+                                    <span v-if="list.orderMode==1">待配送</span>
+                                </s>
+                            </em>
+                            <span v-if="list.orderState==4"><i>{{list.remainingTime}}m</i><b>剩余送达</b></span>
+                            <span v-if="list.orderState==5">完成</span>
+                            <span v-if="list.orderState==10"><i>{{list.remainingTime}}m</i><b>剩余审核</b>
+                        </div>
+                        <div class="item-body-r" fr v-if="list.orderState!=11&&list.orderState!=12">
+                            <div class="item-line" clear>
+                                <div class="item-line-l" fl>
+                                    <span>客户姓名：</span>
+                                </div>
+                                <div class="item-line-r" fr>
+                                    <em fl>{{list.consignee}}</em>
+                                    <div fl>
+                                        <span class="t" v-if="list.firstOrder" fl :class="{'ios':systemType}">首单用户</span>
+                                        <s v-if="shopTime.now!=0&&list.orderMode==1">
+                                          <span fl v-if="shopTime.now>shopTime.state&&shopTime.now<shopTime.end" :class="{'ios':systemType}">定时配送</span>
+                                          <span fl v-else :class="{'ios':systemType}">营业即送</span>
+                                      </s>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 定义配送方式模块 state-->
+                            <div v-if="list.orderMode==1">
+                                <div class="item-line2" clear>
+                                    <div class="item-line-l" fl>
+                                        <span>配送地址：</span>
+                                    </div>
+                                    <div class="item-line-r" fr>
+                                        <p>{{list.province}}{{list.city}}{{list.district}}{{list.address}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="list.orderMode==2">
+                                <div class="item-line2" clear>
+                                    <div class="item-line-l" fl>
+                                        <span>联系电话：</span>
+                                    </div>
+                                    <div class="item-line-r" fr>
+                                        <p>{{list.phone}}</p>
+                                    </div>
+                                </div>
+                                <div class="item-line2" clear>
+                                    <div class="item-line-l" fl>
+                                        <span>自提时间：</span>
+                                    </div>
+                                    <div class="item-line-r" fr>
+                                        <p>{{list.expectTimeStart | time}} 至 </br>{{list.expectTimeEnd | time}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 定义配送方式模块 end-->
+                            <div class="item-line3">
+                                <span>共<em>{{list.quantity}}</em>件商品</span>
+                                <span>实付金额<em>¥{{list.paidPrice | money}}</em></span>
+                            </div>
+                        </div>
+                        <!-- 11或者12 -->
+                        <div class="item-body-r" clear style="width:auto;" v-if="list.orderState==11||list.orderState==12">
+                            <div class="item-line" style="width:auto;" clear>
+                                <div class="yichang1-line-l" fl>
+                                    <span v-if="list.orderState==11">拒收原因：</span>
+                                    <span v-if="list.orderState==12">取消原因：</span>
+                                </div>
+                                <div class="yichang1-line-r" fl>
+                                    <span>{{list.cancelReason}}</span>
+                                </div>
+                            </div>
+                            <!-- <div class="item-line2" clear style="width:auto;">
+                                <div class="yichang1-line-l" fl>
+                                    <span >操作人：</span>
+                                </div>
+                                <div class="yichang1-line-r" fl>
+                                    <span>大大实打实大苏打</span>
+                                </div>
+                            </div> -->
+                            <div class="item-line2" clear style="width:auto;">
+                                <div class="yichang1-line-l" fl>
+                                    <span v-if="list.orderState==11">拒收时间：</span>
+                                    <span v-if="list.orderState==12">取消原因：</span>
+                                </div>
+                                <div class="yichang1-line-r" fl>
+                                    <span>{{list.updatedAt | time}}</span>
+                                </div>
+                            </div>
+                            <div class="item-line3">
+                                <span fr style="padding-right:0.1rem;padding-bottom:0.1rem;">实付金额<em>¥{{list.paidPrice | money}}</em></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-foot">
+                        <!-- <div class="foot-top">
+                            <span class="bingpin">冰品</span>
+                        </div> -->
+                        <div class="foot-bottom" clear>
+                            <div v-if="list.orderState==3">
+                                <div v-show="list.orderMode==1">
+                                    <div v-show="list.distributionType!=3">
+                                        <div v-show="list.acceptState==0" class="left" fl>已等待抢单{{list.remainingTime}}m</div>
+                                        <div v-show="list.acceptState==1" class="left" fl>已抢单{{list.remainingTime}}m</div>
+                                    </div>
+                                    <div v-show="list.distributionType==3">
+                                        <div class="left" fl>已等待配送{{list.remainingTime}}m</div>
+                                    </div>
+                                </div>
+                                <div v-show="list.orderMode==2">
+                                    <div class="left" fl v-show="list.remainingTime>0">已等待自提{{list.remainingTime}}m</div>
+                                    <div class="left" fl v-show="list.remainingTime<=0">已超时{{list.remainingTime | abs}}m</div>
+                                </div>
+                            </div>
+                            <div v-if="list.orderState==4">
+                                <div v-show="list.orderMode==1">
+                                    <div v-show="list.distributionType!=3">
+                                        <div class="left" v-show="list.acceptState==1" fl>已配送{{list.remainingTime}}m</div>
+                                        <div class="left" v-show="list.acceptState==0" fl>已等待抢单{{list.remainingTime}}m</div>
+                                    </div>
+                                    <div v-show="list.distributionType==3">
+                                        <div class="left" fl>已配送{{list.remainingTime}}m</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bot-bot">已加载全部</div>
+        </div>
+        <div class="page-none-box" v-if="totalQuantity==0">
+            <img src="../../image/search-none.png">
+        </div>
+
+    </div>
+</body>
+<script type="text/javascript" src="../../script/zepto.min.js"></script>
+<script type="text/javascript" src="../../script/common.js"></script>
+<script type="text/javascript" src="../../script/vue.min.js"></script>
+<script type="text/javascript">
+    var http;
+    var code;
+    var page = 1;
+    var stop = true;
+    var title;
+    var type;
+    Vue.filter('money', function(value) {
+        return (value / 100).toFixed(2)
+    });
+    Vue.filter('time', function(value) {
+        return format(value)
+    });
+    Vue.filter('abs', function(value) {
+        return Math.abs(value);
+    });
+    function add0(m) {
+        return m < 10 ? '0' + m : m
+    }
+
+    function format(shijianchuo) {
+        //shijianchuo是整数，否则要parseInt转换
+        var time = new Date(shijianchuo);
+        var y = time.getFullYear();
+        var m = time.getMonth() + 1;
+        var d = time.getDate();
+        var h = time.getHours();
+        var mm = time.getMinutes();
+        var s = time.getSeconds();
+        return y + '-' + add0(m) + '-' + add0(d) + ' ' + add0(h) + ':' + add0(mm) + ':' + add0(s);
+    }
+    var vm = new Vue({
+        el: '#vm',
+        data: {
+            totalQuantity: 0,
+            item: [],
+            shopTime:{
+                state:0,
+                end:0,
+                now:0
+            },
+            systemType:false
+        },
+        methods: {
+            open_order:function(node){
+                var index = $(node).attr('data-index');
+                api.openWin({
+                    name: 'order_win',
+                    url: '../order_win.html',
+                    pageParam: {
+                        id: this.item[index].id,
+                        type: this.item[index].orderState,
+                        orderMode: this.item[index].orderMode,
+                        time: this.item[index].remainingTime,
+                        distributionType: this.item[index].distributionType,
+                        shopTime: [vm.shopTime.state,vm.shopTime.end]
+                    }
+                });
+            }
+        }
+    });
+    apiready = function() {
+        api.parseTapmode();
+        code = ls.getItem('code');
+
+        http = api.loadSecureValue({
+            sync: true,
+            key: 'http'
+        });
+        if(api.systemType == 'ios'){
+            vm.systemType = true
+        }
+        api.setRefreshHeaderInfo({
+            loadingImg: 'widget://image/refresh.png',
+            bgColor: '#eff3f9',
+            textColor: '#999',
+            textDown: '下拉刷新...',
+            textUp: '松开刷新...'
+        }, function(ret, err) {
+            tapAjax(code, type, 1, function() {
+                api.refreshHeaderLoadDone();
+                page = 1;
+                stop = true;
+                $('.bot-bot').hide();
+            });
+        });
+        shopTimeFn();
+        api.addEventListener({
+            name: 'scrolltobottom',
+            extra: {
+                threshold: 0
+            }
+        }, function(ret, err) {
+            if (vm.totalQuantity != 0) {
+                if (stop) {
+                    open_layerImg(100000);
+                    page++;
+                    tapAjax(code, type, page);
+                    stop = false;
+                }
+            }
+        });
+    };
+
+    // 请求数据
+    function tapAjax(token, status, currentPage, fn) {
+        api.ajax({
+            url: http + '/searchOrders',
+            method: 'post',
+            data: {
+                values: {
+                    token: token,
+                    keyword: status,
+                    currentPage: currentPage
+                },
+            }
+        }, function(ret, err) {
+            if (ret) {
+                if (ret.code == '200') {
+                    if (currentPage > 1) {
+                        if (ret.data.length != 0) {
+                            vm.item = vm.item.concat(ret.data);
+                            vm.$nextTick(function() {
+                                api.toast({
+                                    msg: '加载成功',
+                                    duration: 800,
+                                    location: 'bottom'
+                                });
+                                close_layerImg();
+                                setTimeout(function() {
+                                    stop = true;
+                                }, 300)
+                            })
+
+                        } else {
+                            api.toast({
+                                msg: '没有了',
+                                duration: 800,
+                                location: 'bottom'
+                            });
+                            close_layerImg();
+                            $('.bot-bot').show();
+                        }
+
+                    } else {
+                        vm.item = ret.data;
+                        //alert(JSON.stringify(ret))
+                        vm.totalQuantity = ret.totalQuantity;
+
+                        vm.$nextTick(function() {
+                            close_layerImg();
+                            setTimeout(function() {
+                                stop = true;
+                            }, 300);
+                        })
+                        fn && fn();
+                    }
+                    setTimeout(function() {
+                        api.parseTapmode();
+                        vm.shopTime.now = nowTime();
+                    }, 0)
+                } else {
+                    close_layerImg();
+                    open_layer(ret.message, 1500);
+                    api.refreshHeaderLoadDone();
+                }
+            } else {
+                close_layerImg();
+                open_layer('连接服务器失败', 1500);
+                api.refreshHeaderLoadDone();
+            }
+        });
+    }
+    //获取营业时间
+    function nowTime(){
+    		var time = new Date();
+    		var h = time.getHours();
+        var m = time.getMinutes();
+        return '' + h + m;
+    	}
+
+    function shopTimeFn() {
+        api.ajax({
+            url: http + '/getMineInfo',
+            method: 'post',
+            data: {
+                values: {
+                    token: code
+                }
+            }
+        }, function(ret, err) {
+            if (ret) {
+                if (ret.code == 200) {
+                    vm.shopTime.state = ret.data.businessTimeStart.replace(/:/g,'');
+                    vm.shopTime.end = ret.data.businessTimeEnd.replace(/:/g,'');
+                } else {
+                    open_layer(ret.message, '1500');
+                }
+            }
+        });
+    }
+</script>
+
+</html>

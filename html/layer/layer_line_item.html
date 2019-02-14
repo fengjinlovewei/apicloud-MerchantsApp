@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" type="text/css" href="../../css/reset.css">
+  <style>
+        html,
+        body {
+            background: none;
+            width: 100%;
+            height: 100%;
+        }
+        .layer-item{
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: -webkit-flex;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .layer-box{
+            width: 2.4rem;
+            padding: 0.2rem;
+            background: #fff;
+            border-radius: 0.1rem;
+            position: relative;
+        }
+        .layer-img-box{
+            width: 2.2rem;
+            height: 2.2rem;
+            margin: 0 auto;
+            margin-top: 0.1rem;
+            overflow: hidden;
+        }
+        .layer-img-box img{
+            width: 100%;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+        .layer-img-box img[not] {
+            opacity: 0;
+        }
+        .close-box{
+            height: 0.2rem;
+            background: #fff;
+        }
+        .layer-box p{
+           word-wrap: break-word;
+           white-space:pre-line;
+           padding-top: 0.05rem;
+        }
+        .layer-box p em{
+            color: #666;
+        }
+        .layer-box p span{
+            display: inline;
+            color: #333;
+        }
+        .close{
+            width: 0.2rem;
+            height: 0.2rem;
+            background: url(../../image/guanbi.png) no-repeat center;
+            background-size: 0.15rem ;
+            position: absolute;
+            right:0.07rem;
+            top:0.07rem;
+        }
+  </style>
+</head>
+<body>
+    <div class="layer-item">
+
+        <div class="layer-box">
+            <div class="layer-img-box">
+                <img src="" alt="" class="img" not>
+            </div>
+            <div>
+                <p><em>商品名称：</em><span class="name"></span></p>
+                <p><em>规格：</em><span class="type"></span></p>
+                <p><em>UPC：</em><span class="upc"></span></p>
+                <p><em>货号：</em><span class="sku"></span></p>
+            </div>
+            <div class="close" onclick="api.closeFrame();" tapmode big></div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../../script/zepto.min.js"></script>
+<script type="text/javascript">
+      apiready = function(){
+          var str = '';
+          var data = api.pageParam.data;
+          //alert(JSON.stringify(data))
+          $('.img').attr('src',data.photo).on('load', function() {
+              $(this).removeAttr('not');
+          });
+          $('.name').html(data.name);
+          str +=  data.option1!=null&&data.option1!=''?data.option1:'';
+          str +=  data.option1Value!=null&&data.option1Value!=''?data.option1Value:'';
+          str +=  data.option2!=null&&data.option2!=''?data.option2:'';
+          str +=  data.option2Value!=null&&data.option2Value!=''?data.option2Value:'';
+          $('.type').html(str);
+          $('.upc').html(data.upc);
+          $('.sku').html(data.skuId);
+          // $('.coding').html();
+
+      }
+</script>
+</html>

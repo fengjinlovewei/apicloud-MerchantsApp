@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../css/order_frm.css">
+</head>
+<body>
+    <div id="vm">
+        <div class="line-1" clear>
+            <div class="line-1-l" mid fl>
+                <span v-if="order.orderState==0"><i></i><b>待接单</b></span>
+                <span v-if="order.orderState==1"><i></i><b>待打印</b></span>
+                <span v-if="order.orderState==2"><i></i><b>待拣货</b></span>
+                <span v-if="order.orderState==3"><i></i><b>待配送</b></span>
+                <span v-if="order.orderState==4"><i></i><b>配送中</b></span>
+                <span v-if="order.orderState==5"><i></i><b>完成</b></span>
+                <span v-if="order.orderState==10"><i></i><b>申请取消</b></span>
+                <span v-if="order.orderState==11"><i></i><b>已拒收</b></span>
+                <span v-if="order.orderState==12"><i></i><b>已取消</b></span>
+            </div>
+            <div v-if="order.orderMode==1"class="line-1-r" fl >
+                <p v-if="shopTime.now!=0">
+                    <span v-if="shopTime.now>shopTime.state&&shopTime.now<shopTime.end" :class="{'ios':systemType}">立即送</span>
+                    <span v-else :class="{'ios':systemType}">营业送</span>
+                </p>
+                <p>预计送达：<em>{{order.expectTimeEnd | time}}</em></p>
+            </div>
+            <div v-if="order.orderMode==2"class="line-1-r" fl >
+                <p>自提时间：<em>{{order.expectTimeStart | time}} 至</em></p>
+                <p><em style="padding-left:5em;">{{order.expectTimeEnd | time}}</em></p>
+            </div>
+        </div>
+        <div class="line-3" clear>
+            <div class="line-3-tit" fl><span>订单号</span></div>
+            <div class="line-3-tex" fl>{{order.no}}</div>
+            <div class="line-3-btn" onclick="copy('.line-3-tex')">复制</div>
+        </div>
+        <div class="wuliu-show" v-if="packageInfoList.length!=0">
+            <div class="line-2">
+                <div class="line-3">
+                    <div class="line-3-tit" fl><span>物流信息</span></div>
+                    <div class="line-3-tex" fl id="cs">{{packageInfoList[0].content}}</div>
+                    <div class="line-2-btn" fr tapmode onclick="wuliu(this)">展开</div>
+                </div>
+                <div class="flow-box" clear>
+                    <div class="flow-move" v-if="packageInfoList.length==1">
+                        <div class="flow-line line-first nober" fr v-for="(flows,i) in packageInfoList">
+                            <p class="flow-p1">【{{flows.content}}】 <br v-if="flows.distributionNumber" />{{flows.distributionNumber | danhao}}</p>
+                            <p class="flow-p2" v-if="flows.distributionCompany">{{flows.distributionCompany}} </p>
+                            <p class="flow-p2" v-if="flows.driverName">配送员：{{flows.driverName}} 电话：{{flows.driverPhone}}</p>
+                            <p class="flow-p2">{{flows.pushTime | time}}</p>
+                        </div>
+                    </div>
+                    <div class="flow-move" v-if="packageInfoList.length>1">
+                        <div class="flow-line" fr v-for="(flows,i) in packageInfoList" :class="{'line-first':i==0,'line-last':i==(packageInfoList.length-1)}">
+                            <p class="flow-p1">【{{flows.content}}】 <br v-if="flows.distributionNumber" />{{flows.distributionNumber | danhao}}</p>
+                            <p class="flow-p2" v-if="flows.distributionCompany">{{flows.distributionCompany}} </p>
+                            <p class="flow-p2" v-if="flows.driverName">配送员：{{flows.driverName}} 电话：{{flows.driverPhone}}</p>
+                            <p class="flow-p2">{{flows.pushTime | time}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="line-3" clear v-if="wuliu.car!=''">
+                <div class="line-3-tit" fl><span>配送方式</span></div>
+                <div class="line-3-tex" fl>{{wuliu.car}}</div>
+            </div>
+            <div class="line-3" clear v-if="wuliu.men!=''" onclick="myCall(this)" tapmode>
+                <div class="line-3-tit" fl><span>配送员</span></div>
+                <div class="line-3-tex" fl>{{wuliu.men}}</div>
+                <div class="line-3-phone">
+                    <span call>{{wuliu.phone}}</span>
+                    <i></i>
+                </div>
+            </div>
+        </div>
+        <div v-if="order.billType">
+            <div class="line-3" clear>
+                <div class="line-3-tit" fl><span>发票类型</span></div>
+                <div class="line-3-tex" fl>{{order.billType}}</div>
+            </div>
+            <div class="line-3" clear>
+                <div class="line-3-tit" fl><span>单位名称</span></div>
+                <div class="line-3-tex" fl>{{order.billCompanyName}}</div>
+            </div>
+            <div class="line-auto" clear>
+                <div class="line-auto-tit" fl><span>纳税人识别 号</span></div>
+                <div class="line-auto-tex" fl>{{order.companyNo}}</div>
+            </div>
+        </div>
+        <div class="line-3" clear>
+            <div class="line-3-tit" fl><span>用户备注</span></div>
+        </div>
+        <div class="line-3-beizhu">
+            <p>{{order.remark| str}}</p>
+        </div>
+        <div class="line-4" clear>
+            <div class="line-3-tit" fl><span>商品信息</span></div>
+            <div class="line-3-btn" id="gaidan" onclick="gaidan()" tapmode v-if="order.orderState==0||order.orderState==1||order.orderState==2">修改订单</div>
+        </div>
+        <div class="item-list-box" v-for="(item,index) in orderItemList">
+            <div class="item-list" clear>
+                <div class="item-list-l" fl>
+                    <div class="l-img-box" :data-index="index" tapmode onclick="vm.open_layerItem(this)">
+                        <img :src="item.photo" not>
+                    </div>
+                </div>
+                <div class="item-list-r" fl>
+                    <p class="p1">{{item.name}}</p>
+                    <p class="p1">{{item.option1}}{{item.option1Value}} {{item.option2}}{{item.option2Value}}</p>
+                    <p class="p2" clear><span fl>￥{{item.salePrice}}</span><em fr>x{{item.conNum}}</em></p>
+                </div>
+                <div class="let">
+                    <div clear class="let-top">
+                        <div class="btn-jian" :class="{'btn-jian-none none':item.ban||item.conNum==0||item.refundQuantity>0}" onclick="vm.numMove(this,false)" :data-index="index" jia tapmode></div>
+                        <div class="btn-text" :class="{'btn-text-none':item.ban||item.refundQuantity>0}">{{item.conNum}}</div>
+                        <div class="btn-jia" :class="{'btn-jia-none none':item.ban||item.conNum==item.conNum2||item.refundQuantity>0}" onclick="vm.numMove(this,true)" :data-index="index" jia tapmode></div>
+                    </div>
+                    <div class="duan" :class="{'duan-none':item.ban,'duan-none none':item.refundQuantity>0}" onclick="vm.numNone(this)" :data-index="index" tapmode btn-none>
+                        <span v-if="item.refundQuantity==0">该商品已断货</span>
+                        <span v-if="item.refundQuantity>0">已更改</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="tuikuan" v-if="tuikuan">
+            <div class="line-4" clear>
+                <div class="line-3-tit" fl><span>退款商品</span></div>
+            </div>
+            <div class="item-list-box" v-for="(item,index) in orderItemList" v-if="item.refundQuantity!=0">
+                <div class="item-list" clear>
+                    <div class="item-list-l" fl>
+                        <div class="l-img-box" :data-index="index" tapmode onclick="vm.open_layerItem(this)">
+                            <img :src="item.photo" not>
+                        </div>
+                    </div>
+                    <div class="item-list-r" fl>
+                        <p class="p1">{{item.name}}</p>
+                        <p class="p1">{{item.option1}}{{item.option1Value}} {{item.option2}}{{item.option2Value}}</p>
+                        <p class="p2" clear><span fl>￥{{item.salePrice}}</span><em fr>x{{item.refundQuantity}}</em></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="line-5">
+            <p>
+                <span fl>商品金额</span>
+                <span fr>￥{{allMoney}}</span>
+            </p>
+            <p>
+                <span fl>运费金额</span>
+                <span fr>￥{{order.orderFreight | money}}</span>
+            </p>
+            <div class="hr"></div>
+            <p v-if="order.productDiscount!=0">
+                <span fl>优惠</span>
+                <span class="bgred" fl :class="{'ios-bgred':systemType}">优惠</span>
+                <span class="red" fr>-￥{{order.productDiscount | money}}</span>
+            </p>
+            <!-- <p v-if="order.freightDiscount!=0">
+                <span fl>运费优惠</span>
+                <span class="bgred" fl>优惠</span>
+                <span class="red" fr>-￥{{order.freightDiscount | money}}</span>
+            </p> -->
+            <div class="hr" v-if="order.productDiscount!=0"></div>
+            <p>
+                <span fl>用户实付金额</span>
+                <span fl class="zhifu">{{order.paymentMethod}}</span>
+                <span class="red" fr>￥{{order.paidPrice | money}}</span>
+            </p>
+        </div>
+        <div class="line-4" clear>
+            <div class="line-3-tit" fl><span>客户信息</span></div>
+            <div class="line-3-btn" onclick="mybeizhu()" tapmode>商家备注</div>
+        </div>
+        <div class="line-3" clear>
+            <div class="line-3-tit" fl><span>成交时间</span></div>
+            <div class="line-3-tex" fl>{{order.paidAt | time}}</div>
+        </div>
+        <div class="line-3" clear onclick="myCall(this)" tapmode>
+            <div class="line-3-tit" fl><span>客户姓名</span></div>
+            <div class="line-3-tex" fl>{{order.consignee}}</div>
+            <div class="line-3-phone">
+                <span call>{{order.phone}}</span>
+                <i></i>
+            </div>
+        </div>
+        <div class="line-6" clear>
+            <div class="line-3-tit" fl><span>客户地址</span></div>
+            <div class="line-3-area" fl>{{order.province}}{{order.city}}{{order.district}}{{order.address}}</div>
+        </div>
+        <div class="line-6" clear>
+            <div class="line-3-tit" fl><span>商家备注</span></div>
+            <div class="line-3-area" fl id="mybeizhu">{{order.messageInfo | str}}</div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../script/zepto.min.js"></script>
+<script type="text/javascript" src="../script/vue.min.js"></script>
+<script type="text/javascript" src="../script/common.js"></script>
+<script type="text/javascript" src="../script/order_frm.js"></script>
+
+</html>

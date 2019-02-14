@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../css/swiper-3.4.2.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/saoma_frm.css">
+</head>
+<body>
+    <div id="box">
+          <div class="two-box" v-for="(list,i) in data" onclick="vm.open_saoma2(this)" tapmode>
+              <div class="two-tit">
+                  <div fl>订单号： <span class="red">{{list.no}}</span></div>
+                  <div class="two-time" fr><span>{{list.paidAt | time}}</span></div>
+              </div>
+              <div class="two-item">
+                  <div>
+                      <div class="swiper-container">
+                          <ul class="swiper-wrapper">
+                              <li v-for="(item,ii) in list.itemPhotos" class="swiper-slide" >
+                                  <img :src="item" not>
+                                  <i>{{list.itemQuantity[ii]}}</i>
+                              </li>
+                          </ul>
+                      </div>
+                  </div>
+
+              </div>
+              <div class="two-foot" clear>
+                  <div class="two-num">共 <em class="red">{{list.allPrice}}</em> 件商品,实付款 <em class="red">¥{{list.paidPrice | money}}</em></div>
+              </div>
+          </div>
+          <div class="page-none-box" v-if="data.length==0">
+              <img src="../image/search-none.png">
+          </div>
+      </div>
+</body>
+<script type="text/javascript" src="../script/zepto.min.js"></script>
+<script type="text/javascript" src="../script/vue.min.js"></script>
+<script type="text/javascript" src="../script/swiper-3.4.2.jquery.min.js"></script>
+<script type="text/javascript" src="../script/common.js"></script>
+<script type="text/javascript">
+    var code, http, num;
+    Vue.filter('time', function(value) {
+        return format(value)
+    });
+    Vue.filter('money', function(value) {
+        return (value / 100).toFixed(2)
+    });
+    var vm = new Vue({
+        el: '#box',
+        data: {
+          data:{},
+          systemType:false
+        },
+        mounted: function() {
+            this.$nextTick(function () {
+            });
+        },
+        methods: {
+            open_saoma2:function(node){
+                var n = $(node).index();
+                var orderId = this.data[n].id;
+                api.openWin({
+                    name: 'saoma2_win',
+                    url: './saoma2_win.html',
+                    pageParam: {
+                        orderId: orderId
+                    }
+                });
+            }
+        }
+    });
+    apiready = function() {
+        api.parseTapmode();
+        myfn.fixStatusBar($('.header').get(0));
+        code = ls.getItem('code');
+        http = api.loadSecureValue({
+            sync: true,
+            key: 'http'
+        });
+        if(api.systemType == 'ios'){
+            vm.systemType = true
+        }
+        num = api.pageParam.num;
+        setTimeout(function(){
+            ajax();
+        })
+    }
+
+    function ajax(){
+        api.ajax({
+            url: http + '/listUserOrder',
+            method: 'post',
+            data: {
+                values: {
+                    mobile: num,
+                    token: code
+                }
+            }
+        },function(ret, err){
+            if (ret) {
+                if(ret.code==200){
+                    for(var i=0;i<ret.data.length;i++){
+                        var allPrice = 0;
+                        for(var k =0;k<ret.data[i].itemQuantity.length;k++){
+                            allPrice += parseInt(ret.data[i].itemQuantity[k]);
+                        }
+                        ret.data[i].allPrice = allPrice;
+                    }
+                    vm.data = ret.data;
+                    setTimeout(function () {
+                        $('#box').show();
+                        vm.$nextTick(function() {
+                            $('#box img').on('load', function() {
+                                $(this).removeAttr('not');
+                            });
+                        })
+                        api.parseTapmode();
+                        new Swiper($('.swiper-container'), {
+                            direction: 'horizontal',
+                            loop: false,
+                            freeMode: true,
+                            slidesPerView: 'auto',
+                            touchMoveStopPropagation: false,
+                            preventLinksPropagation: false,
+                            preventClicks: false,
+                        });
+                    },0)
+                }else{
+                    alert(ret.message);
+                    vm.data = [];
+                }
+                //alert( JSON.stringify( ret ) );
+            } else {
+                alert( JSON.stringify( err ) );
+                vm.data = [];
+            }
+        });
+    }
+    function add0(m) {
+        return m < 10 ? '0' + m : m
+    }
+
+    function format(shijianchuo) {
+        //shijianchuo是整数，否则要parseInt转换
+        var time = new Date(shijianchuo);
+        var y = time.getFullYear();
+        var m = time.getMonth() + 1;
+        var d = time.getDate();
+        var h = time.getHours();
+        var mm = time.getMinutes();
+        var s = time.getSeconds();
+        return add0(h) + ':' + add0(mm);
+    }
+    function closeThis() {
+        api.closeWin();
+    }
+</script>
+
+</html>

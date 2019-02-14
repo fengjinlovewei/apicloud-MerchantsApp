@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        html,body {
+            background: #384266;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        canvas {
+            cursor: crosshair;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+</body>
+<script>
+apiready = function(){
+
+  setTimeout(function(){
+    api.openWin({
+        name: 'login_win',
+        url: 'login_win.html',
+        pageParam: {
+            name: 'test'
+        },
+    });
+  },4000)
+
+
+
+};
+</script>
+<script>
+    // 当动画在画布上，最好使用requestanimationframe代替setTimeout或setInterval
+    // 不支持在所有浏览器，虽然有时需要前缀，所以我们需要一个垫片
+    window.requestAnimFrame = (function() {
+        return window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            function(callback) {
+                window.setTimeout(callback, 1000 / 60);
+            };
+    })();
+
+    // 现在我们将为演示设置基本变量
+    var canvas = document.getElementById('canvas'),
+        ctx = canvas.getContext('2d'),
+        // 全屏幕尺寸
+        cw = window.innerWidth*2,
+        ch = window.innerHeight*2+400,
+        // 烟花的集合    firework collection
+        fireworks = [],
+        // 粒子的集合
+        particles = [],
+        // 色调
+        hue = 120,
+        // when launching fireworks with a click, too many get launched at once without a limiter, one launch per 5 loop ticks
+        //当发射烟花与点击，太多的发射一次没有限制，一个发射每5循环蜱
+        limiterTotal = 5,
+        limiterTick = 0,
+        // this will time the auto launches of fireworks, one launch per 80 loop ticks
+        //这将时间的自动发射的烟花，一个发射每80循环蜱
+        timerTotal = 8,
+        timerTick = 0,
+        mousedown = false,
+        // 鼠标的X坐标,
+        mx,
+        // 鼠标的y坐标
+        my;
+
+    // 设置画布尺寸
+    canvas.width = cw;
+    canvas.height = ch;
+    canvas.style.width = cw/2+'px';
+    canvas.style.height = ch/2  +'px';
+
+    // 现在我们要建立我们的整个演示功能的占位符
+
+    // 在范围内得到随机数
+    function random(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    // 计算两点之间的距离
+    function calculateDistance(p1x, p1y, p2x, p2y) {
+        var xDistance = p1x - p2x,
+            yDistance = p1y - p2y;
+        return Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+    }
+
+    // 创造烟花
+    function Firework(sx, sy, tx, ty) {
+        // 实际坐标
+        this.x = sx;
+        this.y = sy;
+        // 起始坐标
+        this.sx = sx;
+        this.sy = sy;
+        // 目标坐标
+        this.tx = tx;
+        this.ty = ty;
+        // 从起点到目标的距离
+        this.distanceToTarget = calculateDistance(sx, sy, tx, ty);
+        this.distanceTraveled = 0;
+        // 跟踪每个烟花的过去坐标，创建一个跟踪效果，增加坐标计数，以创建更突出的路径
+        this.coordinates = [];
+        this.coordinateCount = 3;
+        // 用当前坐标填充初始坐标集合
+        while (this.coordinateCount--) {
+            this.coordinates.push([this.x, this.y]);
+        }
+        this.angle = Math.atan2(ty - sy, tx - sx);
+        this.speed = 2;
+        this.acceleration = 1.05;
+        this.brightness = random(50, 70);
+        // 圆形目标指示器半径
+        this.targetRadius = 0;
+    }
+
+    // 更新的烟火
+    Firework.prototype.update = function(index) {
+        // 删除坐标数组中的最后一个项目
+        this.coordinates.pop();
+        // 将当前坐标添加到数组的开始
+        this.coordinates.unshift([this.x, this.y]);
+
+        // 循环圆目标指示半径
+        if (this.targetRadius < 8) {
+            this.targetRadius += 0;
+        } else {
+            this.targetRadius = 0;
+        }
+
+        // 加速烟火
+        this.speed *= this.acceleration;
+
+        // 根据角度和速度得到当前速度
+        var vx = Math.cos(this.angle) * this.speed,
+            vy = Math.sin(this.angle) * this.speed;
+        // 烟花的传播速度有多远？
+        this.distanceTraveled = calculateDistance(this.sx, this.sy, this.x + vx, this.y + vy);
+
+        // 如果行驶的距离，包括速度，大于目标的初始距离，那么目标已经达到
+        if (this.distanceTraveled >= this.distanceToTarget) {
+            createParticles(this.tx, this.ty);
+            // 删除烟花，使用的索引传递到更新功能，以确定哪些删除
+            fireworks.splice(index, 1);
+        } else {
+            // 目标未达到，继续旅行
+            this.x += vx;
+            this.y += vy;
+        }
+    }
+
+    // 画烟花
+    Firework.prototype.draw = function() {
+        ctx.beginPath();
+        // 移动到集合中的最后一个跟踪坐标，然后向当前x和y绘制一条线
+        ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+        ctx.lineTo(this.x, this.y);
+        ctx.strokeStyle = 'hsl(' + hue + ', 100%, ' + this.brightness + '%)';
+        ctx.stroke();
+
+        ctx.beginPath();
+        // 用脉冲圆绘制烟火的目标
+        ctx.arc(this.tx, this.ty, this.targetRadius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    // 创建粒子
+    function Particle(x, y) {
+        this.x = x;
+        this.y = y;
+        // 跟踪每个粒子的过去坐标，创建一个跟踪效果，增加坐标计数来创建更突出的路径
+        this.coordinates = [];
+        this.coordinateCount = 5;
+        while (this.coordinateCount--) {
+            this.coordinates.push([this.x, this.y]);
+        }
+        // 在所有可能的方向设置一个任意角度、弧度
+        this.angle = random(0, Math.PI * 2);
+        this.speed = random(1, 10);
+        // 摩擦会使粒子减速
+        this.friction = 0.95;
+        // 重力将被应用和拉粒子下来
+        this.gravity = 1;
+        //设置色相为一个随机数+ - 20的整体色调变量
+        this.hue = random(hue - 20, hue + 20);
+        this.brightness = random(50, 80);
+        this.alpha = 1;
+        // 设置粒子消失的速度
+        this.decay = random(0.015, 0.03);
+    }
+
+    // 更新粒子
+    Particle.prototype.update = function(index) {
+        // 删除坐标数组中的最后一个项目
+        this.coordinates.pop();
+        // 将当前坐标添加到数组的开始
+        this.coordinates.unshift([this.x, this.y]);
+        // 减慢粒子
+        this.speed *= this.friction;
+        // 应用速度
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed + this.gravity;
+        // 淡出粒子
+        this.alpha -= this.decay;
+
+        // 删除粒子一旦alpha足够低，根据传入的索引
+        if (this.alpha <= this.decay) {
+            particles.splice(index, 1);
+        }
+    }
+
+    // 绘制粒子
+    Particle.prototype.draw = function() {
+        ctx.beginPath();
+        // 移动到集合中的最后一个跟踪坐标，然后向当前x和y绘制一条线
+        ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+        ctx.lineTo(this.x, this.y);
+        ctx.strokeStyle = 'hsla(' + this.hue + ', 100%, ' + this.brightness + '%, ' + this.alpha + ')';
+        ctx.stroke();
+    }
+
+    // 创建粒子群/爆炸
+    function createParticles(x, y) {
+        // 增加一个更大爆炸的粒子数，小心帆布的性能随粒子的增加而增加。
+        var particleCount = 30;
+        while (particleCount--) {
+            particles.push(new Particle(x, y));
+        }
+    }
+
+    // main demo loop
+    function loop() {
+        // this function will run endlessly with requestAnimationFrame
+        requestAnimFrame(loop);
+
+        // increase the hue to get different colored fireworks over time
+        hue += 0.5;
+
+        // normally, clearRect() would be used to clear the canvas
+        // we want to create a trailing effect though
+        // setting the composite operation to destination-out will allow us to clear the canvas at a specific opacity, rather than wiping it entirely
+        ctx.globalCompositeOperation = 'destination-out';
+        // decrease the alpha property to create more prominent trails
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, cw, ch);
+        // change the composite operation back to our main mode
+        // lighter creates bright highlight points as the fireworks and particles overlap each other
+        ctx.globalCompositeOperation = 'lighter';
+
+        // loop over each firework, draw it, update it
+        var i = fireworks.length;
+        while (i--) {
+            fireworks[i].draw();
+            fireworks[i].update(i);
+        }
+
+        // loop over each particle, draw it, update it
+        var i = particles.length;
+        while (i--) {
+            particles[i].draw();
+            particles[i].update(i);
+        }
+
+        // launch fireworks automatically to random coordinates, when the mouse isn't down
+        if (timerTick >= timerTotal) {
+            if (!mousedown) {
+                // start the firework at the bottom middle of the screen, then set the random target coordinates, the random y coordinates will be set within the range of the top half of the screen
+                fireworks.push(new Firework(cw / 2, ch, random(0, cw), random(0, ch / 2)));
+                timerTick = 0;
+            }
+        } else {
+            timerTick++;
+        }
+
+        // limit the rate at which fireworks get launched when mouse is down
+        if (limiterTick >= limiterTotal) {
+            if (mousedown) {
+                // start the firework at the bottom middle of the screen, then set the current mouse coordinates as the target
+                fireworks.push(new Firework(cw / 2, ch, mx, my));
+                limiterTick = 0;
+            }
+        } else {
+            limiterTick++;
+        }
+    }
+
+
+    // once the window loads, we are ready for some fireworks!
+    window.onload = loop;
+</script>
+
+</html>

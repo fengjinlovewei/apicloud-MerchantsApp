@@ -1,0 +1,75 @@
+<widget id="A6944107272487" version="0.0.1">
+
+    <name>MerchantsEasyond</name>
+
+    <description>
+
+        Example For APICloud.
+
+    </description>
+
+    <author email="developer@apicloud.com" href="http://www.apicloud.com">
+
+        Developer
+
+    </author>
+
+    <content src="index.html"/>
+
+    <access origin="*"/>
+
+    <preference name="pageBounce" value="false"/>
+
+    <preference name="appBackground" value="rgba(0,0,0,0.0)"/>
+
+    <preference name="windowBackground" value="rgba(0,0,0,0.0)"/>
+
+    <preference name="frameBackgroundColor" value="rgba(0,0,0,0.0)"/>
+
+    <preference name="hScrollBarEnabled" value="true"/>
+
+    <preference name="vScrollBarEnabled" value="true"/>
+
+    <preference name="autoLaunch" value="true"/>
+
+    <preference name="fullScreen" value="false"/>
+
+    <preference name="autoUpdate" value="false"/>
+
+    <!-- 提示更新配置 -->
+    <preference name="smartUpdate" value="true"/>
+
+    <preference name="debug" value="true"/>
+
+    <preference name="statusBarAppearance" value="true"/>
+
+    <permission name="readPhoneState"/>
+
+    <permission name="camera"/>
+
+    <permission name="record"/>
+
+    <permission name="location"/>
+
+    <permission name="fileSystem"/>
+
+    <permission name="internet"/>
+
+    <permission name="bootCompleted"/>
+
+    <permission name="hardware"/>
+
+    <!-- 设置键盘工具栏隐藏 -->
+    <preference name="softInputBarEnabled" value="false"/>
+
+    <!-- 设置键盘上移 -->
+    <preference name="softInputMode" value="pan"/>
+
+
+    <!-- 配置后台播放音频苹果公司规定应用使用了后台运行时，必须要在iTunes Connect里应用的描述里面进行声明，否则应用会被拒绝。具体可以参考其他应用如百度地图里面的描述。 -->
+    <preference name="backgroundMode" value="audio | voip | bluetooth-central | bluetooth-peripheral"/>
+
+    <!-- 配置不进行CA证书是否受信任的校验，将该字段置为false即可，默认为true。 -->
+    <preference name="checkSslTrusted" value="false"/>
+
+</widget>

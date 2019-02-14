@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../../css/reset.css">
+    <style>
+        html,
+        body {
+            background: none;
+        }
+
+        .top-none {
+            padding: 0.85rem 0.1rem 0;
+        }
+
+        .top-title {
+            height: 0.4rem;
+            line-height: 0.4rem;
+            width: 100%;
+            background: #384266;
+            color: #fff;
+            text-align: center;
+            font-size: 0.16rem;
+            position: relative;
+        }
+
+        .top-title i {
+            display: block;
+            height: 0.4rem;
+            width: 0.5rem;
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            background: url('../../image/back.png') no-repeat;
+            background-size: 0.1rem auto;
+            background-position: 0.1rem center;
+        }
+
+        .top-title s {
+            display: block;
+            height: 0.4rem;
+            width: 0.5rem;
+            line-height: 0.4rem;
+            padding: 0 0.1rem;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            text-align: center;
+            color: #fff;
+            font-size: 0.13rem;
+        }
+
+        .frm-box {
+            padding: 0 0.1rem;
+        }
+
+        .frm {
+            width: 100%;
+            height: 3.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-none">
+        <div class="top-title">
+            <i onclick="myClose()" tapmode></i>
+            <span class="name"></span>
+            <s onclick="ok()" tapmode>确定</s>
+        </div>
+    </div>
+    <div class="frm-box">
+        <div class="frm">
+
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../../script/zepto.min.js"></script>
+<script type="text/javascript">
+    var th, bh, bw, blo, code, http, data, orderId;
+    apiready = function() {
+        api.parseTapmode();
+        blo = api.pageParam.stop;
+        orderId = api.pageParam.orderId;
+        code = ls.getItem('code');
+        http = api.loadSecureValue({
+            sync: true,
+            key: 'http'
+        });
+        $('.name').html(api.pageParam.title);
+        th = $('.top-none').height();
+        bh = $('.frm').height();
+        bw = $('.frm').width();
+        if (blo == 1) {
+            $('.name').html('选择拣货员');
+            ajaxAll('/orderPicker');
+        } else if (blo == 2) {
+            $('.name').html('选择配送方式');
+            ajaxAll('/platform')
+        }else if(blo == 3){
+            $('.name').html('选择取消原因');
+            open_couFrm(blo, 'null', orderId,api.pageParam.distributionType)
+        }
+    }
+    //ajaxAll是配送员/配送方式，要请求数据后，把数据一起带到子窗口的函数
+    //其他不需要请求的可直接open_couFrm(blo, data, orderId)，但不需要的参数要传空
+    function ajaxAll(option) {
+        api.ajax({
+            url: http + option,
+            method: 'post',
+            data: {
+                values: {
+                    token: code
+                }
+            }
+        }, function(ret, err) {
+            if (ret) {
+                if (ret.code == 200) {
+                    open_couFrm(blo, ret.data, orderId,'null');
+                } else {
+                    api.alert({
+                        title: '提示',
+                        msg: '获取失败',
+                    });
+                }
+            } else {
+                api.alert({
+                    title: '提示',
+                    msg: '异常错误',
+                });
+            }
+        });
+    }
+    //blo为类型  data为传子页面数据  orderid订单id  distributionType为 取消配送的特定参数 -配送方式-
+    function open_couFrm(blo, data, orderId,distributionType) {
+        api.openFrame({
+            name: 'courier_frm',
+            url: './courier_frm.html',
+            rect: {
+                x: (api.winWidth - bw) / 2,
+                y: th,
+                w: bw,
+                h: bh
+            },
+            pageParam: {
+                stop: blo,
+                data: data,
+                orderId: orderId,
+                distributionType:distributionType
+            },
+            animation: {
+                type: "movein", //动画类型（详见动画类型常量）
+                subType: "from_right", //动画子类型（详见动画子类型常量）
+                duration: 200 //动画过渡时间，默认300毫秒
+            },
+            bounces: true,
+            bgColor: '#eff3f9',
+        });
+    }
+
+    function myClose() {
+        api.closeFrame({
+            name: 'courier_frm'
+        });
+        setTimeout(function() {
+            api.closeFrame();
+        }, 1)
+    }
+
+    // 点击确定的函数
+    function ok() {
+        if (blo==1) {
+
+            api.execScript({
+                frameName: 'courier_frm',
+                script: 'ajaxItem();'
+            });
+        } else if(blo==2){
+            api.execScript({
+                frameName: 'courier_frm',
+                script: 'ajaxWuliu();'
+            });
+
+        }else if(blo==3){
+          api.execScript({
+              frameName: 'courier_frm',
+              script: 'ajaxQx();'
+          });
+        }
+    }
+</script>
+
+</html>

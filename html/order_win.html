@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../css/order_win.css">
+</head>
+<body>
+    <div class="header">
+        <i class="go-out" onclick="closeThis()" tapmode></i>
+        <span>订单详情</span>
+        <i class="printer" onclick="homeSay()" tapmode></i>
+    </div>
+    <div class="footer">
+        <!-- item0按钮组 -->
+        <div class="btn-box box0" clear none>
+            <div class="yes" fr onclick="item0_yes()" tapmode>接单</div>
+            <div class="no" fl onclick="item0_no()" tapmode>取消</div>
+        </div>
+        <!-- item1按钮组 -->
+        <div class="btn-box box1" clear none>
+            <div class="no" fl w-w onclick="homeSay()" tapmode>打印</div>
+        </div>
+        <!-- item2按钮组 -->
+        <div class="btn-box box2" clear none>
+            <div class="no" fl w-w onclick="item2_yes()" tapmode none orderMode="1">拣货完成 召唤骑士</div>
+            <div class="no" fl w-w onclick="item2_yes2()" tapmode none orderMode="2">拣货完成 通知用户</div>
+        </div>
+        <!-- item3按钮组 -->
+        <div class="btn-box box3" clear none>
+            <div none orderMode="1">
+                <div none distributionType="1">
+                    <div class="no" fl w-w onclick="item3_no()" tapmode>取消</div>
+                </div>
+                <div none distributionType="0">
+                    <div class="no" fl w-w onclick="item3_no3()" tapmode>开始配送</div>
+                </div>
+            </div>
+            <div none orderMode="2">
+                <div none time="1">
+                    <div class="yes" fr w-w onclick="item3_yes()" tapmode>提货</div>
+                </div>
+                <div none time="2">
+                    <div class="yes" fr onclick="item3_yes()" tapmode>提货</div>
+                    <div class="no" fl onclick="item3_no2()" tapmode>提醒用户</div>
+                </div>
+            </div>
+        </div>
+        <!-- item4按钮组 -->
+        <div class="btn-box box4" clear none>
+            <div none orderMode="1">
+                <div none distributionType="0">
+                    <div class="no" fl w-w onclick="item4_yes2()" tapmode>配送完成</div>
+                </div>
+                <div none distributionType="1">
+                    <div class="no" fl w-w onclick="closeThis()" tapmode>返回</div>
+                </div>
+            </div>
+        </div>
+        <!-- item5按钮组 -->
+        <div class="btn-box box5" clear none>
+            <div class="no" fl w-w onclick="closeThis()" tapmode>返回</div>
+        </div>
+        <!-- item10按钮组 -->
+        <div class="btn-box box10" clear none>
+            <div class="yes" fr onclick="yichang10_yes()" tapmode>拒绝取消</div>
+            <div class="no" fl onclick="yichang10_no()" tapmode>同意取消</div>
+        </div>
+        <!-- item11按钮组 -->
+        <div class="btn-box box11" clear none>
+            <div class="no" fl w-w onclick="closeThis()" tapmode>返回</div>
+        </div>
+        <!-- item12按钮组 -->
+        <div class="btn-box box12" clear none>
+            <div class="no" fl w-w onclick="closeThis()" tapmode>返回</div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../script/zepto.min.js"></script>
+<script type="text/javascript" src="../script/order_win.js"></script>
+
+</html>

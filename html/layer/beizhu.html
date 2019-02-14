@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../../css/reset.css">
+    <style>
+        html,
+        body {
+            background: none;
+        }
+
+        .box {
+            width: 3rem;
+            background: #fff;
+            margin: 0 auto;
+            border-radius: 0.06rem;
+            overflow: hidden;
+        }
+
+        .area-box {
+            width: 2.55rem;
+            height: 1.4rem;
+            padding: 0.1rem;
+            background: #eceff8;
+            margin: 0.25rem auto 0;
+            border-radius: 0.06rem;
+        }
+
+        #text {
+            width: 100%;
+            height: 100%;
+            background: none;
+            font-size: 0.16rem;
+            border: 0;
+            display: block;
+            line-height: 0.2rem;
+            opacity: 0;
+            transition-duration: 0.3s;
+        }
+
+        .btn-box {
+            width: 2.75rem;
+            height: 0.3rem;
+            margin: 0.1rem auto;
+        }
+
+        .baocun {
+            width: 0.7rem;
+            height: 0.3rem;
+            line-height: 0.3rem;
+            border-radius: 0.06rem;
+            border: 1px solid #384266;
+            background: #384266;
+            color: #fff;
+            text-align: center;
+            margin-left: 0.1rem;
+        }
+
+        .quxiao {
+            width: 0.7rem;
+            height: 0.3rem;
+            line-height: 0.3rem;
+            border-radius: 0.06rem;
+            color: #384266;
+            border: 1px solid #384266;
+            text-align: center;
+        }
+
+        .nos {
+            width: 100%;
+            height: 0.65rem;
+        }
+
+        .focus {
+            width: 100%;
+            height: 3rem;
+            background: red;
+            position: fixed;
+            top: 0;
+            left: 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body onclick="api.closeFrame()" tapmode>
+    <div class="nos"></div>
+    <div class="box" onclick="stop(event)" tapmode>
+        <div class="area-box">
+            <textarea name="name" id="text" placeholder="最多输入50个字" onclick="this.focus()" tapmode></textarea>
+        </div>
+        <div class="btn-box">
+            <div class="baocun" id="btnyes" fr onclick="AIval(newval)" tapmode>保存</div>
+            <div class="quxiao" fr onclick="api.closeFrame()" tapmode>取消</div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../../script/zepto.min.js"></script>
+<script type="text/javascript" src="../../script/common.js"></script>
+<script>
+    var text = document.getElementById('text');
+    var btnyes = document.getElementById('btnyes');
+    var name, id, code, http, UIInput, placeholder, strVal;
+    apiready = function() {
+            api.parseTapmode();
+            UIInput = api.require('UIInput');
+            code = ls.getItem('code');
+            http = api.loadSecureValue({
+                sync: true,
+                key: 'http'
+            });
+
+            strVal = api.pageParam.value;
+            name = api.pageParam.name;
+            id = api.pageParam.id;
+            text.style.opacity = '1';
+            btnyes.innerHTML = api.pageParam.btnyes;
+            if (api.pageParam.placeholder) {
+                $('#text').attr('placeholder', api.pageParam.placeholder);
+                placeholder = api.pageParam.placeholder || '最多输入50个字';
+            }
+            setTimeout(function() {
+                openKB();
+            }, 50)
+        }
+
+
+    function AIval(fn) {
+        UIInput.value(function(ret, err) {
+            var value = ret.msg.trim();
+            fn && fn(value);
+        });
+    }
+
+    function newval(value) {
+        //var val = text.value.trim();
+        var val = value;
+        text.blur();
+        if (val.length < 1) {
+            api.alert({
+                title: '提示',
+                msg: '内容不符合标准',
+            });
+            return false;
+        }
+        //订单详情页面修改商家留言
+        if (name == 'order_frm') {
+            api.ajax({
+                url: http + '/shopRemark',
+                method: 'post',
+                data: {
+                    values: {
+                        token: code,
+                        remark: val,
+                        orderId: id
+                    }
+                }
+            }, function(ret) {
+                if (ret.code == 200) {
+                    open_layer(ret.message, 1500);
+                    api.execScript({
+                        frameName: name,
+                        script: 'beizhuval("' + val + '")'
+                    });
+                    setTimeout(function() {
+                        api.closeFrame();
+                    }, 1500)
+                } else {
+                    open_layer('留言失败', 1500);
+                }
+            });
+            //商家取消订单
+        } else if (name == 'item0') {
+            open_layerImg(20000);
+            api.ajax({
+                url: http + '/cancelOrder',
+                method: 'post',
+                data: {
+                    values: {
+                        token: code,
+                        orderId: id,
+                        cancelReason: val
+                    }
+                }
+            }, function(ret, err) {
+                close_layerImg();
+                if (ret.code == 200) {
+                    api.alert({
+                        title: '',
+                        msg: '取消成功',
+                    }, function(ret, err) {
+                        api.execScript({
+                            name: 'home_win',
+                            frameName: 'item0',
+                            script: 'tapAjax(code, type, 1);'
+                        });
+
+                        api.execScript({
+                            name: 'order_win',
+                            script: 'closeThis();'
+                        });
+                        setTimeout(function() {
+                            api.closeFrame();
+                        }, 50)
+                    });
+                } else {
+                    api.alert({
+                        title: '警告',
+                        msg: ret.message,
+                    }, function(ret, err) {
+                        api.closeFrame();
+
+                    });
+
+                }
+            });
+            //提货码接口
+        } else if (name == 'item3') {
+            api.ajax({
+                url: http + '/takeCode',
+                method: 'post',
+                data: {
+                    values: {
+                        token: code,
+                        takeCode: val,
+                        orderId: id
+                    }
+                }
+            }, function(ret, err) {
+                if (ret) {
+                    if (ret.code == 200) {
+                        open_layer('操作成功', 1500);
+                        api.execScript({
+                            name: 'home_win',
+                            frameName: 'item3',
+                            script: 'deleteItem(' + id + ');' //接单页面节点随之刷新
+                        });
+                        api.execScript({
+                            name: 'home_win',
+                            frameName: 'item5',
+                            script: 'tapAjax(code, type, 1);' //打印页面随之刷新
+                        });
+                        api.execScript({
+                            name: 'home_win',
+                            script: 'couMoveHome(5)'//首页跳转打印
+                        });
+                        api.execScript({
+                            name: 'order_win',
+                            script: 'closeThis();'
+                        });
+                        setTimeout(function() {
+                            api.closeFrame();
+                        }, 50)
+                    } else {
+                        open_layer(ret.message, 1500);
+                    }
+                } else {
+                    open_layer('连接服务器失败', 1500);
+                }
+            });
+            //商家拒绝用户退单
+        } else if (name == 'yichang0') {
+            api.ajax({
+                url: http + '/isAgreeCancelOrder',
+                method: 'post',
+                data: {
+                    values: {
+                        token: code,
+                        isAgreeCancel: 0,
+                        orderId: id,
+                        cancelReason: val
+                    }
+                }
+            }, function(ret, err) {
+                if (ret) {
+                    if (ret.code == 200) {
+                        open_layer('操作成功', 1500);
+                        api.execScript({
+                            name: 'home_win',
+                            frameName: 'yichang0',
+                            script: 'tapAjax(code, type, 1);'
+                        });
+
+                        setTimeout(function() {
+                            api.closeFrame();
+                        }, 50)
+
+                    } else {
+                        open_layer(ret.message, 1500);
+                    }
+                } else {
+                    open_layer('连接服务器失败', 1500);
+                }
+            });
+        }
+    }
+
+    function stop(event) {
+        event.stopPropagation();
+    }
+
+    function openKB() {
+        var offsetL = $('.area-box').offset().left;
+        var offsetT = $('.area-box').offset().top;
+        var w = $('.area-box').width();
+        var h = $('.area-box').height();
+        UIInput.open({
+            rect: {
+                x: offsetL + 2,
+                y: offsetT + 2,
+                w: w - 4,
+                h: h - 4
+            },
+            styles: {
+                bgColor: '#eceff8',
+                size: 16,
+                color: '#000',
+                placeholder: {
+                    color: '#ccc'
+                }
+            },
+            autoFocus: true,
+            maxRows: 8,
+            placeholder: placeholder,
+            keyboardType: 'default',
+            fixedOn: api.frameName
+        }, function(ret, err) {
+            // if (ret) {
+            //     alert(JSON.stringify(ret));
+            // } else {
+            //     alert(JSON.stringify(err));
+            // }
+        });
+        setTimeout(function(){
+            UIInput.value({
+                msg: strVal
+            });
+        },50)
+    }
+</script>
+
+</html>

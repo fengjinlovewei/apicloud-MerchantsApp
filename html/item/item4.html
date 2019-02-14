@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" type="text/css" href="../../css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../../css/home_frm.css">
+    <title>Document</title>
+    <script type="text/javascript">
+        var type = 4;
+        var resId = 0;
+    </script>
+</head>
+
+<body>
+    <div id="vm" class="vm4">
+        <div id="item0">
+            <div class="msg" v-if="totalQuantity!=0" id="fixedTop">
+                <span>当前门店还有{{totalQuantity}}个【配送中】订单</span>
+            </div>
+            <div id="fixedTop-none"></div>
+            <div>
+                <div class="item1" v-for="(list,index) in item" :data-distributionType="list.distributionType" :data-id="list.id" :data-orderMode="list.orderMode">
+                    <div class="item-tit" onclick="open_order(this)" tapmode>
+                        <span>订单号：<em>{{list.no}}</em></span>
+                        <i>配送中<b></b></i>
+                    </div>
+                    <div class="item-body" clear onclick="open_order(this)" tapmode>
+                        <div class="item-body-l" fl mid>
+                            <span><i>{{list.myTimes}}m</i><b>剩余送达</b></span>
+                        </div>
+                        <div class="item-body-r" fr>
+                            <div class="item-line" clear>
+                                <div class="item-line-l" fl>
+                                    <span>客户姓名：</span>
+                                </div>
+                                <div class="item-line-r" fr>
+                                    <em fl>{{list.consignee}}</em>
+                                    <div fl>
+                                        <span class="t" v-if="list.firstOrder" :class="{'ios':systemType}">首单用户</span>
+                                        <s v-if="shopTime.now!=0&&list.orderMode==1">
+                                            <span fl v-if="shopTime.now>shopTime.state&&shopTime.now<shopTime.end" :class="{'ios':systemType}">定时配送</span>
+                                            <span fl v-else :class="{'ios':systemType}">营业即送</span>
+                                        </s>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 定义配送方式模块 state-->
+                            <div v-if="list.orderMode==1">
+                                <div class="item-line2" clear>
+                                    <div class="item-line-l" fl>
+                                        <span>送达时间：</span>
+                                    </div>
+                                    <div class="item-line-r" fr>
+                                        <p>{{list.expectTimeStart | time}} 至 </br>{{list.expectTimeEnd | time}}</p>
+                                    </div>
+                                </div>
+                                <div class="item-line2" clear>
+                                    <div class="item-line-l" fl>
+                                        <span>配送地址：</span>
+                                    </div>
+                                    <div class="item-line-r" fr>
+                                        <p>{{list.province}}{{list.city}}{{list.district}}{{list.address}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="list.orderMode==2">
+                                <div class="item-line2" clear>
+                                    <div class="item-line-l" fl>
+                                        <span>联系电话：</span>
+                                    </div>
+                                    <div class="item-line-r" fr>
+                                        <p>{{list.phone}}</p>
+                                    </div>
+                                </div>
+                                <div class="item-line2" clear>
+                                    <div class="item-line-l" fl>
+                                        <span>自提时间：</span>
+                                    </div>
+                                    <div class="item-line-r" fr>
+                                        <p>{{list.expectTimeStart | time}} 至 </br>{{list.expectTimeEnd | time}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 定义配送方式模块  end -->
+                            <div class="item-line3">
+                                <span>共<em>{{list.quantity}}</em>件商品</span>
+                                <span>实付金额<em>¥{{list.paidPrice | money}}</em></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-foot">
+                        <div class="foot-bottom" clear>
+                            <div>
+                                <div v-show="list.orderMode==1">
+                                    <div v-show="list.distributionType!=3">
+                                        <div class="left" v-show="list.acceptState==1" fl>已配送{{list.remainingTime}}m</div>
+                                        <div class="left" v-show="list.acceptState==0" fl>已等待抢单{{list.remainingTime}}m</div>
+                                    </div>
+                                    <div v-show="list.distributionType==3">
+                                        <div class="left" fl>已配送{{list.remainingTime}}m</div>
+                                        <div class="no" onclick="vm.shopDisEnd(this)" tapmode :data-index="index" fr>完成配送</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bot-bot">已加载全部</div>
+        </div>
+        <div class="page-none-box" v-if="totalQuantity==0">
+            <img src="../../image/page-none.png">
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../../script/zepto.min.js"></script>
+<script type="text/javascript" src="../../script/common.js"></script>
+<script type="text/javascript" src="../../script/vue.min.js"></script>
+<script type="text/javascript" src="../../script/item.js"></script>
+
+</html>

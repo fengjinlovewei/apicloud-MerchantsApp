@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <style>
+        html,
+        body {
+            background: #eff3f9;
+        }
+
+        .go-box {
+            height: 0.4rem;
+            line-height: 0.4rem;
+            background: #fff;
+            margin: 0.06rem 0;
+            border-bottom: 1px solid #eee;
+            border-top: 1px solid #eee;
+        }
+
+        .list-box b {
+            color: #999;
+        }
+
+        .list-box b.go-shebei {
+            color: #333;
+        }
+
+        .list-box div.shebei {
+            margin: 0;
+            border-bottom: 1px solid #eee;
+            border-top: 0;
+        }
+
+        .list-box span {
+            padding-left: 0.1rem;
+        }
+
+        .list-box s {
+            padding-right: 0.1rem;
+            color: #999;
+        }
+
+        .list-box s.yes {
+            color: #333;
+        }
+
+        .list-box i {
+            display: block;
+            height: 100%;
+            width: 0.18rem;
+            background: url(../image/go-in.png) no-repeat center;
+            background-size: 0.08rem auto;
+        }
+
+        .list-box b {
+            width: 100%;
+            text-align: center;
+        }
+
+        .suv {
+            padding: 0;
+            margin: 0;
+            visibility: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="height:2px;"></div>
+    <div class="list-box">
+        <div class="go-box">
+            <b onclick="add(this)" taomode id="go-shebei" class="go-shebei">搜索打印设备</b>
+        </div>
+        <div class="shebei-box">
+        </div>
+        <div id="img-box">
+            <canvas id="barcode"></canvas>
+        </div>
+    </div>
+    <!-- <p class="ceshi"></p> -->
+    <span class="suv"></span>
+</body>
+<script type="text/javascript" src="../script/zepto.min.js"></script>
+<script type="text/javascript" src="../script/common.js"></script>
+<script type="text/javascript">
+    var BluetoothPrinter;
+    var posimgdata = '';
+    var code, http, DYstop;
+    var shoper = {
+        shopAddress: '',
+        shopName: '',
+        shopPhone: ''
+    }
+    apiready = function() {
+        api.parseTapmode();
+        code = ls.getItem('code');
+        DYstop = ls.getItem('DYstop') == null || ls.getItem('DYstop') == '' ? {} : JSON.parse(ls.getItem('DYstop'));
+        http = api.loadSecureValue({
+            sync: true,
+            key: 'http'
+        });
+        BluetoothPrinter = api.require('djyPrinter');
+        BluetoothPrinter.scan({}, function(ret, err) {
+            if (!ret.status) {
+                api.alert({
+                    title: '',
+                    msg: '设备初始化失败，请重试',
+                });
+
+            }
+        });
+
+        //获取门店信息
+        api.ajax({
+            url: http + '/getMineInfo',
+            method: 'post',
+            data: {
+                values: {
+                    token: code
+                }
+            }
+        }, function(ret, err) {
+            if (ret) {
+                if (ret.code == 200) {
+                    shoper = ret.data;
+                } else {
+                    open_layer(ret.message, '1500');
+                }
+            } else {
+                alert(JSON.stringify(err));
+            }
+        });
+    }
+    function add(node) {
+        var str = '';
+        BluetoothPrinter.listBT({}, function(ret, err) {
+            //alert(JSON.stringify(ret))
+            //if (ret.msg == 'value == null') {
+            if (!(ret instanceof Array)) {
+                $('.shebei-box').html('');
+                api.alert({
+                    title: '提示',
+                    msg: '没有获得匹配设备',
+                });
+                return false;
+            }
+            for (var i = 0; i < ret.length; i++) {
+                str += '<div class="go-box shebei" data-name="' + ret[i].name + '" data-address="' + ret[i].address + '" state="' + ret[i].state + '" onclick="connect(this)">' +
+                    '<span fl>' + ret[i].name + '</span>' +
+                    '<s fr>未连接</s>' +
+                    '</div>';
+            }
+            $('.shebei-box').html(str);
+        })
+
+    }
+
+    function connect(node) {
+        if($(node).find('s').hasClass('yes')){
+            return false;
+        }
+        open_layer('连接中..',10000);
+        var name = $(node).attr('data-name');
+        setTimeout(function() {
+            BluetoothPrinter.connect({
+                name: name
+            }, function(ret, err) {
+                close_layer();
+                if(ret){
+                    if (ret.status) {
+                        var str = '';
+                        str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(17); //字体放大
+                        str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(1); //居中
+                        str += "连接成功\n";
+                        str += String.fromCharCode(10);
+                        str += String.fromCharCode(10);
+                        str += String.fromCharCode(10);
+                        str += String.fromCharCode(10);
+                        str += String.fromCharCode(10);
+                        str += String.fromCharCode(10);
+                        str += String.fromCharCode(10);
+                        str += String.fromCharCode(27);
+                        str += String.fromCharCode(105);
+                        BluetoothPrinter.printPOSCommand({
+                            msg: str
+                        }, function(ret, err) {
+                            if (ret.status===true) {
+                                $(node).find('s').addClass('yes').html('已连接');
+                                //广播打印机连接成功变量
+                                api.sendEvent({
+                                    name: 'myEvent',
+                                    extra: {
+                                        key: 1
+                                    }
+                                });
+                            }else{
+                                $(node).find('s').removeClass('yes').html('未连接');
+                                api.alert({
+                                    title: '连接失败',
+                                });
+                            }
+                            if(err){
+                                $(node).find('s').removeClass('yes').html('未连接');
+                                api.alert({
+                                    title: '请检查打印机',
+                                });
+                            }
+                        });
+
+                    } else {
+                        $(node).find('s').removeClass('yes').html('未连接');
+                        api.alert({
+                            title: '连接失败',
+                        });
+                    }
+                }
+                if(err){
+                    $(node).find('s').removeClass('yes').html('未连接');
+                    api.toast({
+                        msg: '连接失败',
+                        duration: 800,
+                        location: 'bottom'
+                    });
+                }
+            });
+        }, 300)
+
+    }
+
+    function add0(m) {
+        return m < 10 ? '0' + m : m
+    }
+
+    function format(shijianchuo) {
+        //shijianchuo是整数，否则要parseInt转换
+        var time = new Date(shijianchuo);
+        var y = time.getFullYear();
+        var m = time.getMonth() + 1;
+        var d = time.getDate();
+        var h = time.getHours();
+        var mm = time.getMinutes();
+        var s = time.getSeconds();
+        return y + '-' + add0(m) + '-' + add0(d) + ' ' + add0(h) + ':' + add0(mm) + ':' + add0(s);
+    }
+
+    function Money(value) {
+        return (value / 100).toFixed(2);
+    }
+
+    function addstr(order, list, nameUrl, orderId, win, wuliu) {
+
+        if (DYstop['a' + orderId]) {
+            api.confirm({
+                title: '提示',
+                msg: '您已经打印过此订单'+DYstop['a' + orderId]+'次，确定多次打印吗',
+                buttons: ['确定', '取消']
+            }, function(ret, err) {
+                if (ret) {
+                    var index = ret.buttonIndex;
+                    if (index == 1) {
+                        DYstop['a' + orderId]++;
+                        setTimeout(function() {
+                            sk(DYstop['a' + orderId]);
+                        }, 50);
+                    } else {
+                        api.execScript({
+                            name: win,
+                            frameName: nameUrl,
+                            script: 'close_layerImg();'
+                        });
+                    }
+                }
+            });
+
+        } else {
+            DYstop['a' + orderId] = 1;
+            setTimeout(function() {
+                sk(DYstop['a' + orderId]);
+            }, 50)
+
+        }
+        //  alert(JSON.stringify(list))
+        //  return false;
+        function sk(number) {
+            var str = ''; //所有打印字段
+            var tiaoma = ''; //条形码字段
+            var tuikuan = ''; //退款字段
+            //制造商品格式区
+            function item_str(name, quantity, salePrice, totalPrice) {
+                var all = '';
+                var middle = Math.ceil(Math.ceil(name.length / 8) / 2) - 1;
+                var $pinming = name.substr(8 * middle, 8);
+                var $pinming1 = quantity;
+                var $pinming2 = salePrice;
+                var $pinming3 = totalPrice;
+                var $w = $('.suv').html($pinming).width();
+                var $w1 = $('.suv').html($pinming1).width();
+                var $w2 = $('.suv').html($pinming2).width();
+                var $w3 = $('.suv').html($pinming3).width();
+
+                while ($w < 130) {
+                    $w += 8;
+                    $pinming += ' ';
+                }
+                while ($w1 < 40) {
+                    $w1 += 8;
+                    $pinming1 += ' ';
+                }
+                while ($w2 < 80) {
+                    $w2 += 8;
+                    $pinming2 += ' ';
+                }
+                while ($w3 < 80) {
+                    $w3 += 8;
+                    $pinming3 += ' ';
+                }
+
+
+                for (var is = 0; is < Math.ceil(name.length / 8); is++) {
+                    if (is == middle) {
+                        all += $pinming + "    " + $pinming1 + $pinming2 + $pinming3 + "\n";
+                    } else {
+                        all += name.substr(is * 8, 8) + "\n";
+                    }
+                }
+
+                return all;
+            }
+
+            //商品主题区
+            function itemBodyFn(n) {
+                var itemBody = '';
+                itemBody += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+                itemBody += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0);
+                itemBody += "------------------------------------------------" + "\n";
+                itemBody += "     品名      " + "     数量   " + "单价     " + "金额" + "\n";
+                itemBody += "------------------------------------------------" + "\n";
+                itemBody += String.fromCharCode(10);
+                var money1 = 0;
+                for (var i = 0; i < list.length; i++) {
+                    var ss = (list[i].quantity - list[i].refundQuantity) * list[i].salePrice;
+                    itemBody += item_str(list[i].name.replace(/ /g, ''), (list[i].quantity - list[i].refundQuantity), list[i].salePrice, ss.toFixed(2));
+                    if(n==1){
+                        itemBody += "货号：" + list[i].skuId + "\n";
+                        itemBody += "UPC码：" + list[i].upc + "\n";
+                        itemBody += "规格：" ;
+                        itemBody +=  list[i].option1?list[i].option1:'';
+                        itemBody +=  list[i].option1Value?"  " + list[i].option1Value:'';
+                        itemBody +=  list[i].option2?"  " + list[i].option2:'';
+                        itemBody +=  list[i].option2Value?"  " + list[i].option2Value:'';
+                        itemBody +=  "\n";
+                    }
+                    itemBody += String.fromCharCode(10);
+                    money1 += ss
+                }
+                itemBody += "------------------------------------------------" + "\n";
+                itemBody += String.fromCharCode(10);
+                itemBody += "商品金额：" + money1.toFixed(2) + "\n";
+
+                itemBody += order.orderMode != 2 ? "运费金额：" + Money(order.orderFreight) + "\n" : '';
+                itemBody += "优惠：" + Money(order.productDiscount) + "\n";
+                //itemBody += order.orderMode != 2 ? "运费优惠：" + Money(order.freightDiscount) + "\n" : '';
+                itemBody += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(17); //字体放大
+                itemBody += "总件数：" + order.quantity + "\n";
+                itemBody += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0);
+                itemBody += "应收金额：" + Money(order.paidPrice) + "\n";
+
+                return itemBody;
+            }
+
+
+            //退款商品区
+            var stop = '';
+            var money2 = 0;
+            var num = 0;
+            for (var ii = 0; ii < list.length; ii++) {
+                if (list[ii].refundQuantity != 0) {
+                    stop += item_str(list[ii].name.replace(/ /g, ''), list[ii].refundQuantity, list[ii].salePrice, (list[ii].refundQuantity * list[ii].salePrice).toFixed(2));
+                    stop += String.fromCharCode(10);
+                    money2 += list[ii].refundQuantity * list[ii].salePrice;
+                    num += list[ii].refundQuantity;
+                }
+            }
+            if (stop) {
+                tuikuan += String.fromCharCode(10);
+                tuikuan += String.fromCharCode(10);
+                tuikuan += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(17); //字体放大
+                tuikuan += "退款信息";
+                tuikuan += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+                tuikuan += "(退款方式按原支付方式返还)" + "\n";
+                tuikuan += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+                tuikuan += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0);
+                tuikuan += "------------------------------------------------" + "\n";
+                tuikuan += "     品名      " + "     数量   " + "单价     " + "金额" + "\n";
+                tuikuan += "------------------------------------------------" + "\n";
+                tuikuan += String.fromCharCode(10);
+                tuikuan += stop;
+
+                tuikuan += "------------------------------------------------" + "\n";
+                tuikuan += String.fromCharCode(10);
+                tuikuan += "商品金额：" + money2.toFixed(2) + "\n";
+                tuikuan += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(17); //字体放大
+                tuikuan += "总件数：" + num + "\n";
+                tuikuan += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0);
+                tuikuan += "退款金额：" + money2.toFixed(2) + "\n";
+
+
+            }
+            // 条码区
+            if (order.orderMode != 2) { //配送
+                if (wuliu.num) {
+                    tiaoma += String.fromCharCode(29) + String.fromCharCode(119) + String.fromCharCode(1);
+                    tiaoma += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(1); //居中
+                    tiaoma += String.fromCharCode(29);
+                    tiaoma += String.fromCharCode(107);
+                    tiaoma += String.fromCharCode(73);
+                    tiaoma += String.fromCharCode(wuliu.num.length + 2);
+                    tiaoma += "{A" + wuliu.num;
+                    tiaoma += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+                    tiaoma += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(1);
+                    tiaoma += wuliu.num + "\n";
+                }
+            } else { //自提
+                tiaoma += String.fromCharCode(29) + String.fromCharCode(119) + String.fromCharCode(1);
+                tiaoma += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(1); //居中
+                tiaoma += String.fromCharCode(29);
+                tiaoma += String.fromCharCode(107);
+                tiaoma += String.fromCharCode(73);
+                tiaoma += String.fromCharCode(order.takeCode.length + 2);
+                tiaoma += "{A" + order.takeCode;
+                tiaoma += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+                tiaoma += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(1);
+                tiaoma += order.takeCode + "\n";
+            }
+
+
+
+            str += String.fromCharCode(27) + String.fromCharCode(64); //esc @ 初始化
+
+            //第一部分
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+            str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(1);
+            str += '打印次数   ' + number + "\n";
+            str += '# ' + order.todayCountOrder + "\n";
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(17); //字体放大
+            str += shoper.shopName == '' ? '' : shoper.shopName + "\n";
+            str += "拣货单\n";
+            str += "【营业即送】\n";
+            str += order.firstOrder ? "（首单用户）\n" : '';
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+            str += "商家留存\n";
+            str += tiaoma;
+
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(10); //字体放大
+            str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0); //居中
+            str += order.orderMode != 2 ? "预计送达：" : "自提时间：";
+            str += format(order.paidAt) + "\n";
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+            str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0);
+            if( order.orderPickerNo){
+                str += "拣货员：" + order.orderPickerNo + "\n";
+            }
+            str += "成交时间：" + format(order.paidAt) + "\n";
+            if(order.billType){
+                str += "发票类型：" + order.billType + "\n";
+                str += "单位名称：" + order.billCompanyName + "\n";
+                str += "纳税人识别号：" + order.companyNo + "\n";
+            }
+            str += "------------------------------------------------" + "\n";
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(10); //字体放大
+            str += "客户备注：" + order.remark + "\n";
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+
+            str += itemBodyFn(1);
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(27);
+            str += String.fromCharCode(109);
+
+            //第二部分
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(17); //字体放大
+            str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(1);
+            if (order.orderMode != 2) {
+                str += wuliu.car == '' ? wuliu.car : wuliu.car + "\n";
+            } else {
+                str += "自提\n";
+            }
+
+            str += "【营业即送】\n";
+            str += order.firstOrder ? "（首单用户）\n" : '';
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(10); //字体放大
+            str += "中国天津自贸区进口商品直营中心\n";
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(10); //字体放大
+            str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0); //居中
+            str += order.orderMode != 2 ? "预计送达：" : "自提时间：";
+            str += format(order.paidAt) + "\n";
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0);
+            str += "订单编号：" + order.no + "\n";
+            str += "支付方式：" + order.paymentMethod + "\n";
+            str += "客户姓名：" + order.consignee + "\n";
+            str += "客户电话：" + order.phone + "\n";
+            if (order.orderMode != 2) {
+                str += "客户地址：" + order.province + order.city + order.district + order.address + "\n";
+            } else {
+                str += "门店地址：" + shoper.shopAddress + "\n";
+            }
+
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(17); //字体放大
+            str += "商品信息" + "\n";
+
+            str += itemBodyFn(2);
+
+
+            str += tuikuan;
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(10);
+            str += String.fromCharCode(10);
+
+
+            //第三部分
+            if (order.orderMode == 1) {
+                if (wuliu.men) {
+                    str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(17); //字体放大
+                    str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(1);
+                    str += shoper.shopName == '' ? '' : shoper.shopName + "\n";
+                    str += "运单号\n";
+                    str += tiaoma;
+                    str += String.fromCharCode(10);
+                    str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+                    str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0);
+                    str += "应收金额：" + Money(order.paidPrice) + "\n";
+                    str += "------------------------------------------------" + "\n";
+                    str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(10); //字体放大
+                    str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0); //居中
+                    str += "客户备注：" + order.remark + "\n";
+                    str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+                    str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0);
+                    str += "------------------------------------------------" + "\n";
+
+                    str += "配送姓名：" + wuliu.men + "\n";
+                    str += "配送电话：" + wuliu.phone + "\n";
+
+                    str += "客户签名：" + "\n";
+                    str += String.fromCharCode(10);
+                    str += String.fromCharCode(10);
+                    str += String.fromCharCode(10);
+                    str += String.fromCharCode(10);
+                    str += String.fromCharCode(10);
+                    str += String.fromCharCode(10);
+                    str += String.fromCharCode(10);
+                    str += String.fromCharCode(27);
+                    str += String.fromCharCode(105);
+                }
+
+            } else {
+                str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(17); //字体放大
+                str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(1);
+                str += shoper.shopName == '' ? '' : shoper.shopName + "\n";
+                str += "自提单号\n";
+                str += tiaoma;
+                str += String.fromCharCode(10);
+                str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+                str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0);
+                str += "应收金额：" + Money(order.paidPrice) + "\n";
+                str += "------------------------------------------------" + "\n";
+                str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(10); //字体放大
+                str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0); //居中
+                str += "客户备注：" + order.remark + "\n";
+                str += String.fromCharCode(29) + String.fromCharCode(33) + String.fromCharCode(0); //字体放大
+                str += String.fromCharCode(27) + String.fromCharCode(97) + String.fromCharCode(0);
+                str += "------------------------------------------------" + "\n";
+
+                str += "门店名称：" + shoper.shopName + "\n";
+                str += "门店电话：" + shoper.shopPhone + "\n";
+
+                str += "客户签名：" + "\n";
+                str += String.fromCharCode(10);
+                str += String.fromCharCode(10);
+                str += String.fromCharCode(10);
+                str += String.fromCharCode(10);
+                str += String.fromCharCode(10);
+                str += String.fromCharCode(10);
+                str += String.fromCharCode(10);
+
+            }
+            str += String.fromCharCode(27);
+            str += String.fromCharCode(105);
+
+            BluetoothPrinter.printPOSCommand({
+                msg: str
+            }, function(ret, err) {
+                close_layerImg();
+                api.execScript({
+                    name: win,
+                    frameName: nameUrl,
+                    script: 'close_layerImg();'
+                });
+                if (ret.status===true) {
+                    api.alert({
+                        title: '提示',
+                        msg: '操作成功',
+                    });
+                    //open_layer('打印成功', 1500);
+                    //当为打印页面时，需要改变订单状态
+                    if (order.orderState == 1) {
+                        api.ajax({
+                            url: http + '/updateOrderState',
+                            method: 'post',
+                            data: {
+                                values: {
+                                    token: code,
+                                    orderId: orderId,
+                                    status: 2
+                                }
+                            }
+                        }, function(ret, err) {
+                            if (ret.code == 200) {
+                                api.execScript({
+                                    name: 'home_win',
+                                    script: 'couMoveHome(2)' //跳转到item2
+                                });
+                                api.execScript({
+                                    name: 'home_win',
+                                    frameName: 'item1',
+                                    script: 'deleteItem(' + orderId + ');' //打印页面节点随之刷新
+                                });
+                                api.execScript({
+                                    name: 'home_win',
+                                    frameName: 'item2',
+                                    script: 'tapAjax(code, type, 1);' //item2随之刷新
+                                });
+                                setTimeout(function(){
+
+                                    api.execScript({
+                                        name: 'order_win',
+                                        script: 'closeThis();'
+                                    });
+
+                                },300)
+                            } else {
+                                alert(JSON.stringify(err));
+                            }
+                        });
+
+                    }
+                    ls.setItem('DYstop', JSON.stringify(DYstop));
+                } else {
+                    //open_layer('请配置打印机，打印错误' + (err.msg), 1500);
+                    api.alert({
+                        title: '提示',
+                        msg: '请配置打印机，打印错误' + (err.msg),
+                    });
+                    DYstop['a' + orderId]--;
+                }
+                if(err){
+                    DYstop['a' + orderId]--;
+                    api.alert({
+                        title: '错误',
+                        msg: '连接打印机失败，请到打印设置界面‘重置’后，重新连接打印机',
+                    },function(ret,err){
+                        $('.yes').html('已断开连接').removeClass('yes');
+                        api.execScript({
+                            name: 'login_win',
+                            script: 'setOpen("'+win+'");'
+                        });
+                    });
+                }
+            });
+
+        }
+
+    }
+</script>
+
+</html>

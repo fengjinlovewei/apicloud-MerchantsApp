@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <style>
+        html,
+        body {
+            background: #eff3f9;
+        }
+
+        .list-box div {
+            height: 0.4rem;
+            line-height: 0.4rem;
+            background: #fff;
+            margin: 0.06rem 0;
+            border-bottom: 1px solid #eee;
+            border-top: 1px solid #eee;
+        }
+
+        .list-box span {
+            padding-left: 0.1rem;
+        }
+
+        .list-box s {
+            padding-right: 0.1rem;
+            color: #999;
+            position: relative;
+        }
+
+        .list-box b {
+            display: block;
+            width: 0.06rem;
+            height: 0.06rem;
+            background: url('../image/b-radius.png') no-repeat;
+            background-size: 100% 100%;
+            position: absolute;
+            right: 0.07rem;
+            top: 0.08rem;
+        }
+
+        .list-box i {
+            display: block;
+            height: 100%;
+            width: 0.18rem;
+            background: url(../image/goin.png) no-repeat center;
+            background-size: 0.08rem auto;
+        }
+
+        div.gengxin i {
+            background: url(../image/go-in.png) no-repeat center;
+            background-size: 0.08rem auto;
+        }
+
+        p.zhushi {
+            color: #999;
+            font-size: 0.1rem;
+            margin-top: -0.04rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="height:2px;"></div>
+    <div class="list-box">
+        <div onclick="open_setPrint2()" tapmode>
+            <span fl>打印设置</span>
+            <i fr></i>
+        </div>
+        <div onclick="gengxin(this)" tapmode class="gengxin-box">
+            <span fl>检查更新</span>
+            <i fr></i>
+            <s fr id="ver"></s>
+        </div>
+        <div onclick="clearCache()" tapmode>
+            <span fl>清除缓存</span>
+            <i fr></i>
+            <s fr id="clear"></s>
+        </div>
+        <div onclick="cleardayin()" tapmode>
+            <span fl>清除打印记录</span>
+            <i fr></i>
+            <s fr id="dayinStr"></s>
+        </div>
+        <p class="zhushi"><span>其中包含：</span><s id="dayinStr2"></s></p>
+        <div>
+            <span fl>APP版本</span>
+            <s fr id="v"></s>
+        </div>
+
+    </div>
+</body>
+<script type="text/javascript" src="../script/zepto.min.js"></script>
+<script type="text/javascript" src="../script/common.js"></script>
+<script type="text/javascript">
+    var str, url, appVersion, mam;
+    apiready = function() {
+        api.parseTapmode();
+        api.setRefreshHeaderInfo({
+            loadingImg: 'widget://image/refresh.png',
+            bgColor: '#eff3f9',
+            textColor: '#999',
+            textDown: '下拉刷新...',
+            textUp: '松开刷新...'
+        }, function(ret, err) {
+            getCache();
+            newApp(function() {
+                api.refreshHeaderLoadDone();
+            });
+        });
+        mam = api.require('mam');
+        appVersion = api.appVersion;
+        $('#v').html('v' + appVersion);
+        setTimeout(function() {
+            newApp();
+            getCache();
+            dayinNum();
+        }, 0)
+
+    }
+
+    function getCache() {
+        api.getCacheSize(function(ret) {
+            var size = ret.size;
+            if (size < 0) {
+                switch (size) {
+                    case -3:
+                        $('#clear').html('无法访问存储设备');
+                        break;
+                    case -2:
+                        $('#clear').html('正在准备USB存储设备');
+                        break;
+                    case -1:
+                        $('#clear').html('无存储设备');
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                $('#clear').html(bytesToSize(size));
+            }
+        });
+    }
+    //数据容量单位转换
+    function bytesToSize(bytes, n) {
+
+        if (bytes == null || bytes == '' || isNaN(bytes) || bytes < 2000) return '0 KB';
+
+        var k = 1024, // or 1000
+            sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+            i = Math.floor(Math.log(bytes) / Math.log(k));
+        return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
+    }
+
+    //打印信息存储容量计算
+
+    function dayinNum() {
+        var obj = ls.getItem('DYstop');
+        var a = 0;
+        var b = 0;
+        var num = '0MB';
+        if (obj != null && obj != '') {
+            for (var i in JSON.parse(obj)) {
+                a++;
+                b += parseInt(JSON.parse(obj)[i]);
+            }
+        }
+        if (a != 0) {
+            num = (obj.length / 1024 / 1024).toFixed(10) + 'MB';
+        }
+        $('#dayinStr').html(num);
+        $('#dayinStr2').html(a + '个订单的' + b + '条打印记录');
+    }
+
+
+    function newApp(fn) {
+        mam.checkUpdate(function(ret, err) {
+            if (ret) {
+                if (ret.status) {
+                    if (!ret.result.closed && !ret.result.update) {
+                        $('#ver').html('未发现新版本')
+                    }
+                    if (!ret.result.closed && ret.result.update) {
+                        $('#ver').html('发现最新版本<b></b>').find('b').show();
+                        $('.gengxin-box').addClass('gengxin');
+
+                        str = '新版本号:' + ret.result.version + ';\n更新内容:' + ret.result.updateTip + ';\n发布时间:' + ret.result.time + ';';
+                        url = ret.result.source;
+
+                    }
+                }
+            } else {
+                alert(JSON.stringify(err));
+            }
+            fn && fn();
+        });
+    }
+
+    function gengxin(node) {
+        if (!$(node).hasClass('gengxin')) {
+            return false;
+        }
+
+        api.confirm({
+            title: '有新的版本,是否下载并安装 ',
+            msg: str,
+            buttons: ['确定', '取消']
+        }, function(ret, err) {
+            if (ret.buttonIndex == 1) {
+                if (api.systemType == "android") {
+                    api.download({
+                        url: url,
+                        report: true
+                    }, function(ret, err) {
+                        if (ret && 0 == ret.state) { /* 下载进度 */
+                            api.toast({
+                                msg: "正在下载应用" + ret.percent + "%",
+                                duration: 2000
+                            });
+                        }
+                        if (ret && 1 == ret.state) { /* 下载完成 */
+                            var savePath = ret.savePath;
+                            api.installApp({
+                                appUri: savePath
+                            });
+                        }
+                    });
+                }
+                if (api.systemType == "ios") {
+                    api.installApp({
+                        appUri: url
+                    });
+                }
+            }
+        });
+    }
+
+    function open_setPrint2() {
+
+        var systemType = api.systemType;
+        if (systemType == 'ios') {
+            api.alert({
+                title: '提示',
+                msg: 'ios系统暂不支持打印',
+            });
+        } else {
+            api.execScript({
+                name: 'login_win',
+                script: 'setOpen("set_win");'
+            });
+        }
+    }
+
+    function clearCache() {
+        //ls.setItem('DYstop', '');
+        api.confirm({
+            title: '确定清除缓存吗',
+            buttons: ['确定', '取消']
+        }, function(ret, err) {
+            if (ret.buttonIndex == 1) {
+                api.clearCache(function() {
+                    getCache();
+                    open_layer('清除成功', 1500);
+                });
+            }
+        });
+    }
+
+    function cleardayin(){
+        api.confirm({
+            title: '确定清除打印记录吗',
+            msg: '此处建议数值在3MB左右在清除，\n且清除后不可恢复',
+            buttons: ['确定', '取消']
+        }, function(ret, err) {
+            if (ret.buttonIndex == 1) {
+                ls.setItem('DYstop','');
+                setTimeout(function(){
+                    open_layer('清除成功', 1500);
+                    dayinNum();
+                },50);
+            }
+        });
+    }
+</script>
+
+</html>

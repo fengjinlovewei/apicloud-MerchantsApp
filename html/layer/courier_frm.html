@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../../css/reset.css">
+    <style>
+        html,
+        body {
+            background: #eff3f9;
+        }
+
+        .item-list {
+            height: 0.7rem;
+            background: #fff;
+            margin-bottom: 2px;
+        }
+
+        div.active {
+            background: #4e5e99;
+            color: #fff;
+        }
+
+        .item-list-l {
+            padding: 0.1rem;
+        }
+
+        .item-list-l img {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 200%;
+            overflow: hidden;
+            border: 0;
+        }
+
+        .item-list-r {
+            padding-top: 0.15rem;
+            padding-left: 0.1rem;
+        }
+
+        .item-list-rs {
+            padding-left: 0.1rem;
+        }
+
+        div.active .item-list-r p,
+        div.active .item-list-r p em {
+            color: #fff;
+        }
+
+        .item-list-r p {
+            width: 2.3rem;
+            color: #999;
+        }
+
+        .item-list-r em {
+            color: #333;
+        }
+
+        .item-list-rs span {
+            width: 2.3rem;
+            height: 0.7rem;
+            line-height: 0.7rem;
+        }
+
+        .item-text {
+            padding: 0.1rem;
+            padding-left: 0.2rem;
+            background: #fff;
+            margin-bottom: 2px;
+        }
+
+        .item-text p {
+            line-height: 0.24rem;
+        }
+
+        .qx-box {
+            padding: 0.1rem;
+        }
+
+        #qx-text {
+            width: 100%;
+            display: block;
+            background: #fff;
+            height: 1rem;
+            font-size: 0.14rem;
+            line-height: 0.2rem;
+            border: 1px solid #384266;
+            border-radius: 0.04rem;
+        }
+
+        .close-text {
+            height: 0.36rem;
+            border: 0;
+            display: block;
+            line-height: 0.36rem;
+            min-width: 0.8rem;
+            background: #fff;
+            color: #384266;
+            border: 1px solid #384266;
+            border-radius: 0.04rem;
+            margin: 0.1rem auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="box">
+        <div class="item-box" v-for="(items,index) in item" v-show="stop==1">
+            <div class="item-list" :class="{'active':items.active}" clear onclick="vm.next1(this)" tapmode :data-index="index">
+                <div class="item-list-l" fl>
+                    <img :src="items.avatar">
+                </div>
+                <div class="item-list-r" fl>
+                    <p>姓名：<em>{{items.name}}</em></p>
+                    <p>编号：<em>{{items.jobNumber}}</em></p>
+                </div>
+            </div>
+        </div>
+        <div class="log-box" v-show="stop==2">
+            <div class="item-list" :class="{'active':wulius.active}" clear v-for="(wulius,index) in wuliu" onclick="vm.next2(this)" tapmode :data-index="index">
+                <div class="item-list-l" fl>
+                    <img :src="wulius.photo">
+                </div>
+                <div class="item-list-rs" fl>
+                    <span>{{wulius.platform}}</span>
+                </div>
+            </div>
+        </div>
+        <div class="log-box" v-show="stop==3">
+            <div v-show="textBox">
+                <div class="item-text" :class="{'active':texts.active}" clear v-for="(texts,index) in text" onclick="vm.next3(this)" tapmode :data-index="index">
+                    <p>{{texts.str}}</p>
+                </div>
+            </div>
+            <div v-show="!textBox" class="qx-box">
+                <textarea name="qx" id="qx-text"></textarea>
+                <button class="close-text" onclick="vm.close_text()" tapmode>取消</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+<script type="text/javascript" src="../../script/zepto.min.js"></script>
+<script type="text/javascript" src="../../script/vue.min.js"></script>
+<script type="text/javascript" src="../../script/common.js"></script>
+<script type="text/javascript">
+    var code, http, orderId, distributionType;
+    var vm = new Vue({
+        el: '#box',
+        data: {
+            stop: 1,
+            textBox: true,
+            title: '选择配送员',
+            item: [],
+            wuliu: [],
+            text: [{
+                str: '联系不上商户',
+                type: 1,
+                active: false
+            }, {
+                str: '商品已经售完',
+                type: 2,
+                active: false
+            }, {
+                str: '用户申请取消',
+                type: 3,
+                active: false
+            }, {
+                str: '运力告知不配送 让取消订单',
+                type: 4,
+                active: false
+            }, {
+                str: '订单长时间未分配',
+                type: 5,
+                active: false
+            }, {
+                str: '接单后骑手未取件',
+                type: 6,
+                active: false
+            }, {
+                str: '其他',
+                type: 0,
+                active: false
+            }, ]
+        },
+        methods: {
+            next1: function(node) {
+                var index = $(node).attr('data-index');
+                for (var i = 0; i < this.item.length; i++) {
+                    this.item[i].active = false;
+                }
+                this.item[index].active = true;
+            },
+            next2: function(node) {
+                var index = $(node).attr('data-index');
+                for (var i = 0; i < this.wuliu.length; i++) {
+                    this.wuliu[i].active = false;
+                }
+                this.wuliu[index].active = true;
+            },
+            next3: function(node) {
+                var index = $(node).attr('data-index');
+                for (var i = 0; i < this.text.length; i++) {
+                    this.text[i].active = false;
+                }
+                this.text[index].active = true;
+                if (this.text[index].type == 0) {
+                    this.textBox = false;
+                } else {
+                    this.textBox = true;
+                }
+            },
+            close_text: function() {
+                this.textBox = true;
+                $('#qx-text').blur();
+                for (var i = 0; i < this.text.length; i++) {
+                    this.text[i].active = false;
+                }
+            }
+        }
+    })
+
+    apiready = function() {
+        code = ls.getItem('code');
+        orderId = api.pageParam.orderId;
+        http = api.loadSecureValue({
+            sync: true,
+            key: 'http'
+        });
+        vm.stop = api.pageParam.stop;
+        distributionType = api.pageParam.distributionType;
+        if (vm.stop == 1) {
+            vm.item = api.pageParam.data;
+            for (var i = 0; i < vm.item.length; i++) {
+                Vue.set(vm.item[i], 'active', false);
+            }
+        } else if (vm.stop == 2) {
+            vm.wuliu = api.pageParam.data;
+            for (var i = 0; i < vm.wuliu.length; i++) {
+                Vue.set(vm.wuliu[i], 'active', false);
+            }
+        }
+        setTimeout(function() {
+            api.parseTapmode();
+        }, 50)
+
+    }
+
+    function ajaxItem() {
+        var orderPickerId = -1;
+        for (var i = 0; i < vm.item.length; i++) {
+            if (vm.item[i].active) {
+                orderPickerId = vm.item[i].id;
+            }
+        }
+        if (orderPickerId == -1) {
+            api.alert({
+                title: '提示',
+                msg: '请选择',
+            });
+            return false;
+        }
+        api.ajax({
+            url: http + '/updateOrderState',
+            method: 'post',
+            data: {
+                values: {
+                    token: code,
+                    orderId: orderId,
+                    orderPickerId: orderPickerId,
+                    status: 1
+                }
+            }
+        }, function(ret, err) {
+            if (ret) {
+                if (ret.code == 200) {
+                    api.alert({
+                        title: '',
+                        msg: '接单成功',
+                    }, function(ret, err){
+
+                        api.execScript({
+                            name: 'home_win',
+                            frameName: 'item0',
+                            script: 'deleteItem('+orderId+');' //接单页面节点随之刷新
+                        });
+                        api.execScript({
+                            name: 'home_win',
+                            frameName: 'item1',
+                            script: 'tapAjax(code, type, 1);' //打印页面随之刷新
+                        });
+                        api.execScript({
+                            name: 'home_win',
+                            script: 'couMoveHome(1)' //首页跳转打印
+                        });
+                        setTimeout(function() {
+
+                            api.execScript({
+                                name: 'order_win',
+                                script: 'closeThis();'
+                            });
+                            api.execScript({
+                                frameName: 'courier_win',
+                                script: 'myClose();'
+                            });
+                        }, 100)
+                    });
+                }
+            } else {
+                alert(JSON.stringify(err));
+            }
+        });
+
+    }
+
+    function ajaxWuliu() {
+        open_layerImg(10000);
+        var url;
+        for (var i = 0; i < vm.wuliu.length; i++) {
+            if (vm.wuliu[i].active) {
+                url = vm.wuliu[i].url;
+            }
+        }
+        if (url) {
+            api.ajax({
+                url: http + "/" + url,
+                method: 'post',
+                data: {
+                    values: {
+                        token: code,
+                        orderId: orderId
+                    }
+                }
+            }, function(ret, err) {
+
+                if (ret) {
+                    if (ret.code == 200) {
+                        api.ajax({
+                            url: http + '/updateOrderState',
+                            method: 'post',
+                            data: {
+                                values: {
+                                    token: code,
+                                    orderId: orderId,
+                                    status: 3
+                                }
+                            }
+                        }, function(ret, err) {
+
+                            if (ret.code == 200) {
+                                close_layerImg();
+                                api.alert({
+                                    title: '',
+                                    msg: ret.message
+                                });
+                                api.execScript({
+                                    name: 'home_win',
+                                    script: 'couMoveHome(3)' //跳转待配送
+                                });
+                                api.execScript({
+                                    name: 'home_win',
+                                    frameName: 'item3',
+                                    script: 'tapAjax(code, type, 1);' //待配送页面随之刷新
+                                });
+                                api.execScript({
+                                    name: 'home_win',
+                                    frameName: 'item2',
+                                    script: 'deleteItem('+orderId+');' //拣货页面节点随之刷新
+                                });
+                                api.closeWin({
+                                    name: 'order_win'
+                                });
+                                setTimeout(function() {
+
+                                      api.execScript({
+                                          name: 'order_win',
+                                          script: 'closeThis();'
+                                      });
+
+
+                                    api.execScript({
+                                        frameName: 'courier_win',
+                                        script: 'myClose();'
+                                    });
+                                }, 50)
+                            } else {
+                                close_layerImg();
+                                api.alert({
+                                    title: '提示',
+                                    msg: ret.message
+                                });
+                            }
+
+                        });
+                    }  else {
+                        close_layerImg();
+                        api.alert({
+                            title: '提示',
+                            msg: ret.message
+                        });
+                    }
+                } else {
+                    close_layerImg();
+                    api.alert({
+                        title: '警告',
+                        msg: '连接服务器失败'
+                    });
+                }
+
+            });
+
+        } else {
+            api.alert({
+                title: '提示',
+                msg: '请选择',
+            });
+
+        }
+    }
+
+    function ajaxQx() {
+        var orderCancelCode = -1;
+        var url;
+        var value = $.trim($('#qx-text').val());
+        for (var i = 0; i < vm.text.length; i++) {
+            if (vm.text[i].active) {
+                orderCancelCode = vm.text[i].type;
+            }
+        }
+        if (orderCancelCode == -1) {
+            api.alert({
+                title: '提示',
+                msg: '请选择',
+            });
+            return false;
+        } else if (orderCancelCode == 0) {
+            if (value.length < 1) {
+                api.alert({
+                    title: '提示',
+                    msg: '请认真填写！',
+                });
+                return false;
+            }
+        }
+        //alert(code+','+orderId+','+orderCancelCode+','+value)
+        if (distributionType == 1) {
+            //表示蜂鸟配送
+            url = '/cancelFnOrder';
+        } else if (distributionType == 2) {
+            //表示百度配送
+            api.alert({
+                title: '提示',
+                msg: '暂不支持百度配送',
+            });
+            return false;
+            url = '/cancelFnOrder';
+        } else if (distributionType == 3) {
+            //表示店员配送
+            api.alert({
+                title: '提示',
+                msg: '暂不支持店员配送',
+            });
+            return false;
+            url = '/cancelFnOrder';
+        }
+        open_layerImg(10000);
+
+        api.ajax({
+            url: http + url,
+            method: 'post',
+            data: {
+                values: {
+                    token: code,
+                    orderId: orderId,
+                    orderCancelCode: orderCancelCode,
+                    cancelReason: value
+                }
+            }
+        }, function(ret, err) {
+            close_layerImg();
+            if (ret) {
+                if (ret.code == 200) {
+                    api.alert({
+                        title: '提示',
+                        msg: '取消订单成功'
+                    });
+                    api.execScript({
+                        name: 'home_win',
+                        script: 'couMoveHome(2)' //跳转待配送
+                    });
+                    api.execScript({
+                        name: 'home_win',
+                        frameName: 'item3',
+                        script: 'deleteItem('+orderId+');' //待配送页面随之刷新
+                    });
+                    api.execScript({
+                        name: 'home_win',
+                        frameName: 'item2',
+                        script: 'tapAjax(code, type, 1);' //拣货页面随之刷新
+                    });
+                    api.closeWin({
+                        name: 'order_win'
+                    });
+                    setTimeout(function() {
+                        api.execScript({
+                            name: 'order_win',
+                            script: 'closeThis();'
+                        });
+                        api.execScript({
+                            frameName: 'courier_win',
+                            script: 'myClose();'
+                        });
+                    }, 50)
+                } else {
+                    api.alert({
+                        title: '提示',
+                        msg: ret.message
+                    });
+                }
+            } else {
+                api.alert({
+                    title: '提示',
+                    msg: '异常错误'
+                });
+            }
+        });
+
+
+    }
+</script>
+
+</html>

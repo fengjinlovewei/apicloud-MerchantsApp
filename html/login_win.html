@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <style>
+        html,
+        body {
+            background: #384266;
+        }
+
+        .logo-box {
+            padding: 0.65rem;
+            padding-bottom: 0.1rem;
+        }
+
+        .logo-box img {
+            width: 1.3rem;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header"></div>
+
+</body>
+<script type="text/javascript" src="../script/zepto.min.js"></script>
+<script type="text/javascript">
+    var s = 0;//打印是否链接
+    var setStop = true;
+    apiready = function() {
+            api.parseTapmode();
+            myfn.fixStatusBar($('.header').get(0));
+            api.addEventListener({
+                name: 'keyback'
+            }, function(ret, err) {
+                api.closeWidget({
+                    id: api.appId,
+                    retData: {
+                        name: 'closeWidget'
+                    },
+                    animation: {
+                        type: 'flip',
+                        subType: 'from_bottom',
+                        duration: 500
+                    }
+                });
+            });
+            var h = $('.header').height();
+            api.openFrame({
+                name: 'login_frm',
+                url: './login_frm.html',
+                rect: {
+                    x: 0,
+                    y: h,
+                    w: 'auto',
+                    h: 'auto'
+                },
+                bounces: true,
+                bgColor: '#384266'
+            });
+            //监听设置页面连接状态
+            api.addEventListener({
+                name: 'myEvent'
+            }, function(ret, err) {
+                s = ret.value.key;
+            });
+
+        }
+        //数值传播函数
+    function sayHello(win, frm) {
+        var m = arguments.length;
+        if (m == 1) {
+            api.execScript({
+                name: win,
+                script: 'goSay(' + s + ');'
+            });
+        } else if (m == 2) {
+            api.execScript({
+                name: win,
+                frameName: frm,
+                script: 'goSay(' + s + ');'
+            });
+        }
+    }
+
+    //以下为打印界面跳转相关函数
+
+    function setOne(n) {
+        setStop = n;
+    }
+
+    function setOpen(name) {
+        if (setStop) {
+            api.openWin({
+                name: 'setPrint_win',
+                url: './setPrint_win.html',
+                pageParam: {
+                    name: name
+                }
+            });
+        } else {
+            api.execScript({
+                name: 'setPrint_win',
+                script: 'setUrl("' + name + '");',
+            });
+            api.openWin({
+                name: 'setPrint_win',
+                url: './setPrint_win.html',
+            });
+        }
+    }
+
+</script>
+
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <style>
+        html,
+        body {
+            background: #384266;
+        }
+
+        .logo-box {
+            padding: 0.65rem;
+            transition-duration: 0.5s;
+            -webkit-transition-duration: 0.5s;
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+        }
+
+        .logo-box img {
+            width: 1.3rem;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .in-box {
+            padding: 0 0.27rem;
+            transition-duration: 0.3s;
+            -webkit-transition-duration: 0.3s;
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+            position: relative;
+            top:0;
+            left:0;
+        }
+
+        .list1,
+        .list4,
+        .list2 {
+            height: 0.22rem;
+            border-bottom: 1px solid #ccc;
+            position: relative;
+        }
+
+        .in-box input {
+            border: 0;
+            width: 100%;
+            text-indent: 0.06rem;
+            background: none;
+            color: #fff;
+        }
+
+        .list1 i {
+            position: absolute;
+            right: 0.08rem;
+            bottom: 0;
+            display: block;
+            height: 0.22rem;
+            width: 0.22rem;
+            background: url('../image/close.png') no-repeat;
+            background-size: 0.14rem 0.14rem;
+            background-position: center 0.02rem;
+        }
+
+        .list1 .close_phone {
+            display: none;
+        }
+
+        .eyes_box {
+            position: absolute;
+            right: 0.08rem;
+            bottom: 0;
+            width: 0.22rem;
+            height: 0.22rem;
+            background: ;
+            perspective: 1200px;
+            -webkit-perspective: 1200px;
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+        }
+
+        .open_eyes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: block;
+            width: 0.22rem;
+            height: 0.22rem;
+            float: right;
+            background: url('../image/open_eyes.png') no-repeat;
+            background-size: 0.18rem auto;
+            background-position: center 0.06rem;
+            transform: rotateX(0deg) translateZ(0.01rem);
+            -webkit-transform: rotateX(0deg) translateZ(0.01rem);
+        }
+
+        .close_eyes {
+            position: absolute;
+            left: 0;
+            top: 0.04rem;
+            width: 0.22rem;
+            height: 0.11rem;
+            background: url('../image/close_eyes2.png') no-repeat;
+            background-size: 0.22rem auto;
+            background-position: center -1px;
+            transition-duration: 0.4s;
+            -webkit-transition-duration: 0.4s;
+            transform: rotateX(0deg) translateZ(0.02rem);
+            -webkit-transform: rotateX(0deg) translateZ(0.02rem);
+            transform-origin: 50% 10%;
+            -webkit-transform-origin: 50% 10%;
+            border-top: 0.05rem solid #384266;
+        }
+
+        .login-go {
+            border: 0;
+            width: 100%;
+            height: 0.35rem;
+            border-radius: 0.35rem;
+            background-color: #687192;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="logo-box">
+        <img src="../image/logo.png" alt="">
+    </div>
+    <div class="in-box">
+        <div class="list1" style="padding-top:0.3rem">
+            <input type="text" placeholder="请输入账号" onclick="this.focus()" tapmode id="phone">
+            <i sm class="close_phone" onclick="phone_none()" tapmode></i>
+        </div>
+        <div class="list2" style="padding-top:0.3rem">
+            <input class="password" type="password" placeholder="请输入密码" onclick="this.focus()" tapmode>
+            <div class="eyes_box">
+                <span class="open_eyes" sm onclick="close_in()" tapmode></span>
+                <div class="close_eyes" sm onclick="open_in()" tapmode></div>
+            </div>
+        </div>
+        <div>
+            <div style="height:0.4rem" onclick="fuck_me()" tapmode></div>
+            <button class="login-go" onclick="go_in(true)" tapmode>登录</button>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../script/zepto.min.js"></script>
+<script type="text/javascript" src="../script/common.js"></script>
+<script type="text/javascript">
+    var http;
+    var stop = true;
+
+    apiready = function() {
+        api.parseTapmode();
+        http = api.loadSecureValue({
+            sync: true,
+            key: 'http'
+        });
+        var user = ls.getItem('userName');
+        var pwd = ls.getItem('userPwd');
+        if(pwd != null&&pwd != ''){
+            open_layer('自动登录中', 30000);
+            go_in(false,user,pwd);
+        }
+
+    }
+    setTimeout(function(){
+        open_in();
+    },1000)
+    function phone_none() {
+        $('#phone').val('');
+        $('.close_phone').hide();
+    }
+    function pwd_none(){
+          $('.password').val('');
+    }
+    function open_in() {
+        $('.close_eyes').css({
+            'transform': 'rotateX(110deg) translateZ(0.02rem)',
+            '-webkit-transform': 'rotateX(110deg) translateZ(0.02rem)'
+        });
+        $('.password').attr('type', 'text');
+    }
+
+    function close_in() {
+        $('.close_eyes').css({
+            'transform': 'rotateX(0deg) translateZ(0.02rem)',
+            '-webkit-transform': 'rotateX(0deg) translateZ(0.02rem)'
+        });
+        $('.password').attr('type', 'password');
+    }
+
+    function go_in(n,phone,password) {
+        $('input').blur();
+        if(n){
+            var phone = $.trim($('#phone').val());
+            var password = $('.password').val();
+        }else{
+            var phone = phone;
+            var password = password;
+        }
+
+        if (phone == '' || password == '') {
+            open_layer('账号和密码不能为空', 1500);
+            return false;
+        }
+        open_layerImg(30000);
+        api.ajax({
+            url: http + '/login',
+            method: 'post',
+            data: {
+                values: {
+                    userName: phone,
+                    passWord: password
+                }
+            }
+        }, function(ret, err) {
+            close_layerImg();
+            //alert(JSON.stringify(ret))
+            if (ret) {
+                if (ret.code == '200') {
+                    ls.setItem('code', ret.data); //本地存储token
+                    ls.setItem('userName', phone); //本地存储账号
+                    ls.setItem('userPwd', password); //本地存储密码
+                    setTimeout(function(){
+                      api.openWin({
+                          name: 'home_win',
+                          url: './home_win.html',
+                          delay:200,
+                          slidBackEnabled: false,
+                          // useWKWebView:true,
+                          pageParam: {
+                              str: ret.data
+                          }
+                      });
+                    },500)
+
+
+                } else if (ret.code == '400') {
+                    open_layer('账号或密码错误', 1500);
+                }else{
+                    open_layer(ret.message, 1500);
+                }
+            } else {
+                open_layer('连接服务器失败', 1500);
+                //alert(JSON.stringify(err));
+            }
+        });
+    }
+
+    function fuck_me() {
+        $('input').blur();
+    }
+    $(function() {
+        !function(){
+            var userName = ls.getItem('userName');
+            if(userName!=''&&userName!=null){
+                $('#phone').val(userName);
+            }
+        }();
+        $('#phone').bind('input propertychange', function() {
+            stop = false;
+            var num = $.trim($(this).val());
+            if (num.length > 0) {
+                $('.close_phone').show();
+            } else {
+                $('.close_phone').hide();
+            }
+
+        })
+        $("#phone").keydown(function(event) {
+            if (event.which === 13) {
+                $('input').eq(1).focus();
+            }
+        });
+        $(".password").keydown(function(event) {
+            if (event.which === 13) {
+                go_in();
+            }
+        })
+        $('input').focus(function() {
+            var id = $(this).attr('id');
+            if (id == 'phone') {
+                $(this).attr('type', 'text');
+            }
+            $('.logo-box').css({
+                'transform': 'translate3d(0,-0.4rem,0)',
+                '-webkit-transform': 'translate3d(0,-0.4rem,0)'
+            });
+            $('.in-box').css({
+                'top': '-1rem',
+            });
+        });
+        $('input').blur(function() {
+            $('.logo-box').css({
+                'transform': 'translate3d(0,0,0)',
+                '-webkit-transform': 'translate3d(0,0,0)'
+            });
+            $('.in-box').css({
+                'top': '0px',
+            });
+        });
+    });
+
+
+
+</script>
+
+</html>

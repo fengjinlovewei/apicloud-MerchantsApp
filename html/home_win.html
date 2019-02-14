@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../css/swiper-3.4.2.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/home_win.css">
+</head>
+<body>
+    <div class="header">
+        <div class="system-h"></div>
+        <div class="fn-box">
+            <div class="search-box" onclick="open_search()" tapmode fl>
+                <input type="text" placeholder="输入订单号/手机号" readonly="readonly">
+                <div class="search-btn"></div>
+            </div>
+            <div class="saoma" fr onclick="sao()" tapmode></div>
+        </div>
+        <div class="moveBox">
+            <div class="move-box">
+                <div class="subnav" data-name="item" >
+                    <div class="swiper-top swiper-container">
+                        <ul class="swiper-wrapper trans">
+                            <li class="swiper-slide h-active" onclick="navObj1.taps(this)" tapmode data-bot="接单">
+                                <span>接单</span>
+                            </li>
+                            <li class="swiper-slide" onclick="navObj1.taps(this)" tapmode data-bot="打印">
+                                <span>打印</span>
+                            </li>
+                            <li class="swiper-slide" onclick="navObj1.taps(this)" tapmode data-bot="拣货">
+                                <span>拣货</span>
+                            </li>
+                            <li class="swiper-slide" onclick="navObj1.taps(this)" tapmode data-bot="待配送">
+                                <span>待配送</span>
+                            </li>
+                            <li class="swiper-slide" onclick="navObj1.taps(this)" tapmode data-bot="配送中">
+                                <span>配送中</span>
+                            </li>
+                            <li class="swiper-slide" onclick="navObj1.taps(this)" tapmode data-bot="返回">
+                                <span>完成</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="subnav2" data-name="yichang">
+                    <div class="swiper-top swiper-container">
+                        <ul class="swiper-wrapper trans">
+                            <li class="swiper-slide h-active" onclick="navObj2.taps(this)" tapmode data-bot="0">
+                                <span>申请取消</span>
+                            </li>
+                            <li class="swiper-slide" onclick="navObj2.taps(this)" tapmode data-bot="1">
+                                <span>已拒收</span>
+                            </li>
+                            <li class="swiper-slide" onclick="navObj2.taps(this)" tapmode data-bot="2">
+                                <span>已取消</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <ul>
+            <li onclick="tab(this)" tapmode class="active">
+                <i><div></div></i>
+                <span>订单管理</span>
+            </li>
+            <li onclick="tab(this)" tapmode>
+                <i><div></div><s class="SPI" data-ios="ios-SPI">1</s></i>
+                <span>异常订单</span>
+            </li>
+            <li onclick="tab(this)" tapmode>
+                <i><div></div></i>
+                <span>我的</span>
+            </li>
+        </ul>
+    </div>
+</body>
+<script type="text/javascript" src="../script/zepto.min.js"></script>
+<script type="text/javascript" src="../script/swiper-3.4.2.jquery.min.js"></script>
+<script type="text/javascript" src="../script/vue.min.js"></script>
+<script type="text/javascript" src="../script/common.js"></script>
+<script type="text/javascript" src="../script/home_win.js"></script>
+
+</html>

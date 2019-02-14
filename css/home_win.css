@@ -1,0 +1,220 @@
+html, body {
+    background: #f5f5f5;
+}
+
+.footer {
+    width: 100%;
+    height: 0.44rem;
+    border-top: 1px solid #eff3f9;
+    position: absolute;
+    background: #fff;
+    left: 0;
+    bottom: 0;
+    font-size: 0.11rem;
+    color: #999;
+    overflow: hidden;
+}
+
+.footer ul {
+    display: -webkit-flex;
+    display: flex;
+}
+
+.footer ul li {
+    -webkit-flex: 1;
+    flex: 1;
+    height: 0.44rem;
+    text-align: center;
+}
+
+.footer ul li i {
+    display: block;
+    width: 0.22rem;
+    height: 0.22rem;
+    margin: 0.05rem auto 0px;
+    position: relative;
+}
+
+.SPI {
+    width: 0.1rem;
+    height: 0.1rem;
+    background: url(../image/b-radius.png) no-repeat;
+    background-size: 100% 100%;
+    position: absolute;
+    right: -0.025rem;
+    top: -0.015rem;
+    border-radius: 0.13rem;
+    color: #fff;
+    font-size: 0.08rem;
+    line-height: 0.13rem;
+    text-align: center;
+    display: none;
+}
+s.ios-SPI{
+    line-height: 0.1rem;
+}
+.footer ul li div {
+    width: 0px;
+    height: 0px;
+    overflow: hidden;
+}
+
+.footer ul li:nth-child(1) i, .footer ul li:nth-child(1) div {
+    background: url('../image/book-b.png') no-repeat center;
+    background-size: auto 100%;
+}
+
+.footer ul li:nth-child(2) i {
+    background: url('../image/wrong-b.png') no-repeat center;
+    background-size: auto 100%;
+}
+.footer ul li:nth-child(3) i {
+    background: url('../image/my-b.png') no-repeat center;
+    background-size: auto 100%;
+}
+
+.footer ul li.active:nth-child(1) i {
+    background: url('../image/book-a.png') no-repeat center;
+    background-size: auto 100%;
+}
+
+.footer ul li.active:nth-child(2) i, .footer ul li:nth-child(2) div {
+    background: url('../image/wrong-a.png') no-repeat center;
+    background-size: auto 100%;
+}
+.footer ul li.active:nth-child(3) i, .footer ul li:nth-child(3) div {
+    background: url('../image/my-a.png') no-repeat center;
+    background-size: auto 100%;
+}
+
+.footer ul li.active span {
+    color: #384266;
+}
+
+.header {
+    background-color: #384266;
+    width: 100%;
+    overflow: hidden;
+}
+
+.nav-box {
+    width: 1.8rem;
+    height: 0.28rem;
+    margin: 0.08rem auto;
+    background-color: #4e5e99;
+    border-radius: 0.28rem;
+    overflow: hidden;
+}
+
+.nav-box>div {
+    width: 0.9rem;
+    height: 0.28rem;
+    line-height: 0.28rem;
+    text-align: center;
+    font-size: 0.16rem;
+    color: #fff;
+}
+
+.nav-box>div.abs {
+    background-color: #21294d;
+}
+.fn-box{
+    padding: 0 0.28rem;
+    overflow: hidden;
+}
+.saoma{
+    width: 0.28rem;
+    height: 0.28rem;
+    background: url(../image/saoma.png) no-repeat center;
+    background-size: 80% 80%;
+    margin: 0.08rem 0;
+}
+.search-box {
+    width: 2.2rem;
+    height: 0.28rem;
+    margin: 0.08rem 0;
+    background-color: #fff;
+    border-radius: 0.28rem;
+    position: relative;
+}
+
+.search-btn {
+    width: 0.6rem;
+    height: 100%;
+    background: url(../image/search-fdy.png) no-repeat center;
+    background-size: 0.2rem 0.2rem;
+    position: absolute;
+    right: 0rem;
+    top: 0;
+}
+
+.search-box input {
+    height: 0.2rem;
+    line-height: 0.2rem;
+    font-size: 0.14rem;
+    display: block;
+    margin: 0 auto;
+    padding: 0.04rem 0;
+}
+
+.moveBox {
+    width: 100%;
+    height: 0.36rem;
+    overflow: hidden;
+    position: relative;
+    border-bottom: 1px solid #eff3f9;
+}
+
+.move-box {
+    width: 100%;
+    height: 0.72rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition-duration: 0s;
+    -webkit-transition-duration:0s;
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+}
+
+.subnav, .subnav2 {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.swiper-top {
+    height: 0.36rem;
+    background: #fff;
+    font-size: 0.15rem;
+}
+
+
+/*.subnav .swiper-top .swiper-slide{
+    width: auto;
+    height: 100%;
+    text-align: center;
+    color: #333;
+    padding: 0 0.06rem;
+}*/
+
+.subnav .swiper-top .swiper-slide, .subnav2 .swiper-top .swiper-slide {
+    width: auto;
+    height: 100%;
+    text-align: center;
+    color: #333;
+    padding: 0 0.14rem;
+}
+
+.subnav .swiper-top .swiper-slide span, .subnav2 .swiper-top .swiper-slide span {
+    height: 0.36rem;
+    padding: 0 0.16rem;
+    line-height: 0.36rem;
+    border-bottom: 2px solid #fff;
+    box-sizing: border-box;
+}
+
+.subnav .swiper-top li.h-active span, .subnav2 .swiper-top li.h-active span {
+    border-bottom: 2px solid #384266;
+    color: #384266;
+}

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" type="text/css" href="../../css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../../css/home_frm.css">
+    <title>Document</title>
+    <script type="text/javascript">
+        var type = 10;
+        var resId = 1;
+    </script>
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <div id="vm" class="vm10">
+        <div id="item0">
+            <div class="msg" id="fixedTop">
+                <span>顾客申请取消的订单，超时不审将自动同意取消</span>
+            </div>
+            <div id="fixedTop-none"></div>
+            <div>
+                <div class="item1" v-for="list in item" :data-distributionType="list.distributionType" :data-id="list.id" :data-orderMode="list.orderMode">
+                    <div class="item-tit" onclick="open_order(this)" tapmode >
+                        <span>订单号：<em>{{list.no}}</em></span>
+                        <i>申请取消<b></b></i>
+                    </div>
+                    <div class="item-body" clear onclick="open_order(this)" tapmode>
+                        <div class="item-body-l" fl mid>
+                            <span ><i>{{list.remainingTime}}m</i><b>剩余审核</b>
+                        </div>
+                        <div class="item-body-r" fr>
+                            <div class="item-line" clear>
+                                <div class="yichang0-line-l" fl>
+                                    <span>取消原因：</span>
+                                </div>
+                                <div class="yichang0-line-r" fr>
+                                    <em fl style="color:#666;">{{list.cancelReason}}</em>
+                                </div>
+                            </div>
+                            <div class="item-line2" clear>
+                                <div class="yichang0-line-l" fl>
+                                    <span >申请人：</span>
+                                </div>
+                                <div class="yichang0-line-r" fr>
+                                    <p style="color:#666">{{list.consignee}}</p>
+                                </div>
+                            </div>
+                            <div class="item-line3">
+                                <span fr style="padding-right:0.1rem;padding-bottom:0.1rem;">实付金额<em>¥{{list.paidPrice | money}}</em></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-foot">
+                        <div class="foot-top" >
+                        </div>
+                        <div class="foot-bottom" clear>
+                            <div >
+                                <div class="yes" fr onclick="no_go(this)" tapmode>拒绝取消</div>
+                                <div class="no" fr onclick="yes_go(this)" tapmode>同意取消</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bot-bot">已加载全部</div>
+        </div>
+        <div class="page-none-box" v-if="totalQuantity==0">
+            <img src="../../image/page-none.png">
+        </div>
+
+    </div>
+
+</body>
+<script type="text/javascript" src="../../script/zepto.min.js"></script>
+<script type="text/javascript" src="../../script/common.js"></script>
+<script type="text/javascript" src="../../script/vue.min.js"></script>
+<script type="text/javascript" src="../../script/item.js"></script>
+<script type="text/javascript" >
+      function no_go(node){
+        var id = $(node).parents('.item1').attr('data-id');
+        api.openFrame({
+            name: 'beizhu',
+            url: 'widget://html/layer/beizhu.html',
+            rect: {
+                x: 0,
+                y: 0,
+                w: 'auto',
+                h: 'auto'
+            },
+            pageParam: {
+                id: id,
+                value: '',
+                name: 'yichang0',
+                btnyes: '确定',
+                placeholder: '请输入拒绝理由'
+            },
+            animation: {
+                type: "movein", //动画类型（详见动画类型常量）
+                subType: "from_bottom", //动画子类型（详见动画子类型常量）
+                duration: 300 //动画过渡时间，默认300毫秒
+            },
+            bounces: false,
+            bgColor: 'rgba(0,0,0,0.5)',
+        });
+      }
+      function yes_go(node){
+        var id = $(node).parents('.item1').attr('data-id');
+        api.confirm({
+            title: '',
+            msg: '确认同意取消',
+            buttons: ['确定', '取消']
+        }, function(ret, err){
+            var index = ret.buttonIndex;
+            if(index==1){
+                api.ajax({
+                    url: http + '/isAgreeCancelOrder',
+                    method: 'post',
+                    data: {
+                        values: {
+                            token: code,
+                            isAgreeCancel:1,
+                            orderId:id
+                        }
+                    }
+                },function(ret, err){
+                    if (ret) {
+                        if(ret.code==200){
+                            open_layer('操作成功',1000);
+                            deleteItem(id);
+                            api.execScript({
+                                name: 'home_win',
+                                frameName: 'yichang2',
+                                script: 'tapAjax(code, type, 1);' //打印页面随之刷新
+                            });
+                            api.execScript({
+                                name: 'home_win',
+                                script: 'couMoveHome2(2)' //首页跳转打印
+                            });
+                        }else{
+                            open_layer(ret.message,1000);
+                        }
+                    } else {
+                        open_layer('连接服务器失败',1000);
+                    }
+                });
+
+            }
+        });
+
+
+      }
+</script>
+
+
+</html>

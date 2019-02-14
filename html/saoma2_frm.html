@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../css/saoma_frm2.css">
+    <style>
+    </style>
+</head>
+
+<body>
+    <div id="box">
+        <div class="line-4" clear>
+            <div class="line-3-tit" fl><span>商品信息</span></div>
+        </div>
+        <div class="item-list-box" v-for="(item,index) in orderItemList">
+            <div class="item-list" clear>
+                <div class="item-list-l" fl>
+                    <div class="l-img-box" :data-index="index" tapmode onclick="vm.open_layerItem(this)">
+                        <img :src="item.photo" not>
+                    </div>
+                </div>
+                <div class="item-list-r" fl>
+                    <p class="p1">{{item.name}}</p>
+                    <p class="p1">{{item.option1}}{{item.option1Value}} {{item.option2}}{{item.option2Value}}</p>
+                    <p class="p2" clear><span fl>￥{{item.salePrice}}</span><em fr>x{{item.quantity - item.refundQuantity}}</em></p>
+                </div>
+            </div>
+        </div>
+        <div class="line-5">
+            <p>
+                <span fl>商品金额</span>
+                <span fr>￥{{allMoney}}</span>
+            </p>
+            <p>
+                <span fl>运费金额</span>
+                <span fr>￥{{order.orderFreight | money}}</span>
+            </p>
+            <div class="hr"></div>
+            <p v-if="order.productDiscount!=0">
+                <span fl>优惠</span>
+                <span class="bgred" fl :class="{'ios-bgred':systemType}">优惠</span>
+                <span class="red" fr>-￥{{order.productDiscount | money}}</span>
+            </p>
+            <div class="hr" v-if="order.productDiscount!=0"></div>
+            <p>
+                <span fl>用户实付金额</span>
+                <span fl class="zhifu">{{order.paymentMethod}}</span>
+                <span class="red" fr>￥{{order.paidPrice | money}}</span>
+            </p>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../script/zepto.min.js"></script>
+<script type="text/javascript" src="../script/vue.min.js"></script>
+<script type="text/javascript" src="../script/common.js"></script>
+<script type="text/javascript">
+    var code, http ,orderId;
+    Vue.filter('time', function(value) {
+        return format(value)
+    });
+    Vue.filter('money', function(value) {
+        return (value / 100).toFixed(2)
+    });
+    var vm = new Vue({
+        el: '#box',
+        data: {
+          allMoney: 0,
+          order: {},
+          orderItemList: [],
+          systemType:false
+        },
+        mounted: function() {
+
+        },
+        methods: {
+            open_layerItem:function(node){
+                var index = $(node).attr('data-index');
+                var data = this.orderItemList[index];
+                api.openFrame({
+                    name: 'layer_line_item',
+                    url: 'widget://html/layer/layer_line_item.html',
+                    bgColor:'rgba(0,0,0,0.5)',
+                    bounces: true,
+                    pageParam: {
+                        data: data
+                    }
+                });
+            },
+            money: function() {
+                vm.allMoney = 0;
+                for (var i = 0; i < vm.orderItemList.length; i++) {
+                    vm.allMoney += vm.orderItemList[i].salePrice * (vm.orderItemList[i].quantity - vm.orderItemList[i].refundQuantity);
+                }
+                vm.allMoney = vm.allMoney.toFixed(2)
+            },
+        },
+    });
+    apiready = function() {
+        api.parseTapmode();
+        myfn.fixStatusBar($('.header').get(0));
+        code = ls.getItem('code');
+        http = api.loadSecureValue({
+            sync: true,
+            key: 'http'
+        });
+        if(api.systemType == 'ios'){
+            vm.systemType = true
+        }
+        orderId = api.pageParam.orderId;
+        setTimeout(function(){
+            ajax();
+        })
+    }
+
+    function ajax(){
+        api.ajax({
+          url: http + '/orderDetail',
+          method: 'post',
+          data: {
+              values: {
+                  token: code,
+                  orderId: orderId
+              }
+          }
+        },function(ret, err){
+            if (ret) {
+              vm.orderItemList = ret.data.orderItemList;
+              vm.order = ret.data.order;
+              vm.$nextTick(function() {
+                  $('#box img').on('load', function() {
+                      $(this).removeAttr('not');
+                  });
+                  vm.money();
+              })
+              setTimeout(function() {
+                  api.parseTapmode();
+                  $('#box').show();
+              }, 0)
+                //alert( JSON.stringify( ret ) );
+            } else {
+                alert( JSON.stringify( err ) );
+            }
+        });
+    }
+    function add0(m) {
+        return m < 10 ? '0' + m : m
+    }
+
+    function format(shijianchuo) {
+        //shijianchuo是整数，否则要parseInt转换
+        var time = new Date(shijianchuo);
+        var y = time.getFullYear();
+        var m = time.getMonth() + 1;
+        var d = time.getDate();
+        var h = time.getHours();
+        var mm = time.getMinutes();
+        var s = time.getSeconds();
+        return y + '-' + add0(m) + '-' + add0(d) + '  ' + add0(h) + ':' + add0(mm);
+        //return y + '-' + add0(m) + '-' + add0(d) + ' ' + add0(h) + ':' + add0(mm) + ':' + add0(s);
+    }
+    function closeThis() {
+        api.closeWin();
+    }
+</script>
+
+</html>

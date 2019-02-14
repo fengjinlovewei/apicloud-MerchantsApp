@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../css/user_frm.css">
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <div id="box">
+        <div class="top-box">
+            <div class="top-1">
+                <div class="top-1-box">
+                    <div class="top-1-l">{{userName}}</div>
+                    <div class="top-1-r" onclick="open_set()" tapmode></div>
+                    <span>我的</span>
+                </div>
+            </div>
+            <div class="top-2">
+                <div class="top-2-bor">
+
+                </div>
+            </div>
+            <div class="top-body">
+                <div class="top-body-1">
+                    <div class="user-img">
+                        <img src="../image/user-img.png">
+                        <span v-if="user.isShopHours==0" :class="{'ios':systemType}">营业中</span>
+                        <span v-if="user.isShopHours==1" :class="{'ios':systemType}">非营业</span>
+                    </div>
+                    <p>{{user.shopName}}</p>
+                    <div class="user-btn" clear>
+                        <span v-if="user.isShopHours==0" onclick="shop(1)" tapmode>休息一下</span>
+                        <span v-if="user.isShopHours==1" onclick="shop(0)" tapmode>开始营业</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="xinxi">
+            <div class="xinxi-list" clear>
+                <span fl>门店电话：</span>
+                <p fl>{{user.shopPhone}}</p>
+            </div>
+            <div class="xinxi-list" clear>
+                <span fl>营业时间：</span>
+                <p fl>{{user.businessTimeStart}} - {{user.businessTimeEnd}}</p>
+            </div>
+            <div class="xinxi-list" clear>
+                <span fl>门店地址：</span>
+                <p fl>{{user.shopAddress}}</p>
+            </div>
+            <div class="xinxi-list" clear>
+                <span fl>店长姓名：</span>
+                <p fl>{{user.shopkeeperName}}</p>
+            </div>
+            <div class="xinxi-list" clear>
+                <span fl>店长电话：</span>
+                <p fl>{{user.shopkeeperPhone}}</p>
+            </div>
+        </div>
+        <div class="section">
+            <div class="tel">
+                <p>联系电话</p>
+            </div>
+            <div class="tel-2" clear>
+                <div style="margin-left:0.1rem;" fl onclick="myCall(this)" tapmode>
+                    <p call>{{user.clientServiceCenterPhone}}</p>
+                    <p>呼叫总部客服中心</p>
+                </div>
+                <div style="margin-right:0.1rem;" fr onclick="myCall(this)" tapmode>
+                    <p call>{{user.personInChargePhone}}</p>
+                    <p>呼叫便利店负责人</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+<script type="text/javascript" src="../script/zepto.min.js"></script>
+<script type="text/javascript" src="../script/vue.min.js"></script>
+<script type="text/javascript" src="../script/common.js"></script>
+<script type="text/javascript">
+    var code, http;
+    var vm = new Vue({
+        el: '#box',
+        data: {
+            userName: '',
+            user: {},
+            systemType:false
+        }
+    });
+    apiready = function() {
+        api.parseTapmode();
+        code = ls.getItem('code');
+        vm.userName = ls.getItem('userName');
+        id = api.pageParam.id;
+        http = api.loadSecureValue({
+            sync: true,
+            key: 'http'
+        });
+        if(api.systemType == 'ios'){
+            vm.systemType = true;
+        }
+        api.setRefreshHeaderInfo({
+            loadingImg: 'widget://image/refresh.png',
+            bgColor: '#384266',
+            textColor: '#f5f5f5',
+            textDown: '下拉刷新...',
+            textUp: '松开刷新...'
+        }, function(ret, err) {
+            userAjax(function() {
+                api.refreshHeaderLoadDone();
+            });
+        });
+        setTimeout(function() {
+            userAjax();
+        }, 0)
+
+    }
+
+
+    function userAjax(fn) {
+        api.ajax({
+            url: http + '/getMineInfo',
+            method: 'post',
+            data: {
+                values: {
+                    token: code
+                }
+            }
+        }, function(ret, err) {
+            if (ret) {
+                if (ret.code == 200) {
+                    vm.user = ret.data;
+                    //alert(JSON.stringify(vm.user))
+                } else {
+                    open_layer(ret.message, '1500');
+                }
+            } else {
+                alert(JSON.stringify(err));
+            }
+            fn&&fn();
+        });
+
+
+    }
+
+    function open_set() {
+        api.openWin({
+            name: 'set_win',
+            url: './set_win.html',
+            pageParam: {
+                name: 'test'
+            },
+            animation:{
+                type: "movein", //动画类型（详见动画类型常量）
+                subType: "from_right", //动画子类型（详见动画子类型常量）
+                duration: 300 //动画过渡时间，默认300毫秒
+            }
+        });
+
+    }
+
+    function myCall(node) {
+        var number = $(node).find('[call]').html();
+        api.confirm({
+            title: '',
+            msg: '确定拨打'+number+'吗',
+            buttons: ['确定', '取消']
+        }, function(ret, err){
+            var index = ret.buttonIndex;
+            if(index == 1){
+              api.call({
+                  type: 'tel_prompt',
+                  number: number
+              });
+            }
+        });
+    }
+
+    function shop(num) {
+        open_layerImg(10000);
+        setTimeout(function() {
+            api.ajax({
+                url: http + '/isShopHours',
+                method: 'post',
+                data: {
+                    values: {
+                        token: code,
+                        isShopHours: num
+                    }
+                }
+            }, function(ret, err) {
+                if (ret) {
+                    if (ret.code == 200) {
+                        vm.user.isShopHours = num;
+                    } else {
+                        open_layer(ret.message, '1500');
+                    }
+                } else {
+                    open_layer('异常错误', '1500');
+                }
+                close_layerImg();
+            });
+        },0)
+
+
+    }
+</script>
+
+</html>
